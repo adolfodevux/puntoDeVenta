@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Punto-D</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #6C8B8E;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes fadeInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: fadeInScaleUp 0.8s ease-out forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+
+        .header {
+            color: #333;
+            font-family: 'Pacifico', cursive;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            animation: fadeInFromTop 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            background-color: #D3D3D3;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: -75px;
+            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: bounceIn 0.8s ease-out forwards;
+            animation-delay: 0.4s;
+            opacity: 0;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            cursor: pointer;
+        }
+
+        .profile-pic:hover {
+            transform: translateY(-8px) scale(1.08);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .profile-pic img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .register-box {
+            background-color: #555E5E;
+            padding: 100px 30px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+            animation: fadeInScaleUp 0.8s ease-out forwards;
+            animation-delay: 0.6s;
+            opacity: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            background-color: #D3D3D3;
+            border-radius: 25px;
+            padding: 10px 15px;
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+        .input-group:hover {
+            background-color: #E0E0E0;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+            background-color: #E0E0E0;
+        }
+
+        .input-group i {
+            color: #333;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .input-group input {
+            border: none;
+            background: none;
+            outline: none;
+            flex-grow: 1;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .input-group input::placeholder {
+            color: #666;
+        }
+
+        .error-message {
+            background-color: #FFD700;
+            color: #333;
+            font-size: 0.8em;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 15px;
+            white-space: nowrap;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, margin-top 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-message::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent #FFD700 transparent;
+        }
+
+        .error-message.show {
+            opacity: 1;
+            visibility: visible;
+            margin-top: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            padding-left: 15px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            accent-color: #D3D3D3;
+            transform: scale(1.1);
+        }
+
+        .checkbox-group label {
+            color: #D3D3D3;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .checkbox-group label:hover {
+            color: #E0E0E0;
+        }
+
+        .register-button {
+            background-color: #D3D3D3;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            font-family: 'Pacifico', cursive;
+        }
+
+        .register-button:hover {
+            background-color: #E0E0E0;
+            color: #000;
+            transform: translateY(-7px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .register-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .header {
+                font-size: 2.2em;
+                margin-bottom: 15px;
+            }
+            .profile-pic {
+                width: 120px;
+                height: 120px;
+                margin-bottom: -60px;
+            }
+            .register-box {
+                padding: 80px 20px 20px;
+                border-radius: 12px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .input-group {
+                padding: 8px 12px;
+            }
+            .input-group i {
+                font-size: 1em;
+                margin-right: 8px;
+            }
+            .input-group input {
+                font-size: 0.9em;
+            }
+            .checkbox-group label {
+                font-size: 0.9em;
+            }
+            .register-button {
+                padding: 10px 30px;
+                font-size: 1.1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                font-size: 2em;
+            }
+            .profile-pic {
+                width: 100px;
+                height: 100px;
+                margin-bottom: -50px;
+            }
+            .register-box {
+                padding: 60px 15px 15px;
+            }
+            .input-group {
+                border-radius: 20px;
+            }
+            .register-button {
+                border-radius: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            Punto-D
+        </div>
+        <div class="profile-pic">
+            <img src="Tux (1).png" alt="Logo de Punto-D">
+        </div>
+        <div class="register-box">
+            <div class="form-group">
+                <div class="input-group">
+                    <i class="fas fa-user-plus"></i> <input type="text" placeholder="Usuario" id="usernameInput">
+                </div>
+                <span class="error-message" id="usernameError"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i> <input type="email" placeholder="Email" id="emailInput">
+                </div>
+                <span class="error-message" id="emailError"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <i class="fas fa-lock"></i> <input type="password" placeholder="Password" id="passwordInput">
+                </div>
+                <span class="error-message" id="passwordError"></span>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="showPassword">
+                <label for="showPassword">Mostrar Password</label>
+            </div>
+            
+            <button class="register-button" id="registerButton">Aceptar</button>
+        </div>
+    </div>
+
+    <script>
+        const registerButton = document.getElementById('registerButton');
+        const usernameInput = document.getElementById('usernameInput');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const showPasswordCheckbox = document.getElementById('showPassword');
+        
+        const usernameError = document.getElementById('usernameError');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.add('show'); 
+        }
+
+        function hideError(element) {
+            element.textContent = '';
+            element.classList.remove('show');
+        }
+
+        registerButton.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            hideError(usernameError);
+            hideError(emailError);
+            hideError(passwordError);
+
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            let isValid = true;
+
+            if (username === '') {
+                showError(usernameError, 'El usuario es necesario');
+                isValid = false;
+            }
+
+            if (email === '') {
+                showError(emailError, 'El email es obligatorio');
+                isValid = false;
+            } else if (!/\S+@\S+\.\S+/.test(email)) {
+                showError(emailError, 'Formato de email inválido');
+                isValid = false;
+            }
+
+            if (password === '') {
+                showError(passwordError, 'La contraseña es obligatoria');
+                isValid = false;
+            } else if (password.length < 6) {
+                showError(passwordError, 'La contraseña debe tener al menos 6 caracteres');
+                isValid = false;
+            }
+
+            if (isValid) {
+                alert('¡Registro exitoso!');
+                window.location.href = 'login.html'; 
+            }
+        });
+
+        showPasswordCheckbox.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+
+        usernameInput.addEventListener('input', () => hideError(usernameError));
+        emailInput.addEventListener('input', () => hideError(emailError));
+        passwordInput.addEventListener('input', () => hideError(passwordError));
+
+        usernameInput.addEventListener('focus', () => hideError(usernameError));
+        emailInput.addEventListener('focus', () => hideError(emailError));
+        passwordInput.addEventListener('focus', () => hideError(passwordError));
+    </script>
+</body>
+</html>
