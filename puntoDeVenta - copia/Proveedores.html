@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Punto de Venta</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <link rel="stylesheet" href="Pstyle.css" />
+</head>
+<body>
+  <div class="container">
+
+    <aside class="sidebar">
+      <h2 id="userName"></h2>
+      <nav>
+        <button onclick="window.location.href='NuevaVenta.html'">Nueva Venta</button>
+        <button onclick="window.location.href='Clientes.html'">Clientes</button>
+        <button onclick="window.location.href='Proveedores.html'">Proveedores</button>
+        <button>Productos</button>
+        <button>Ventas</button>
+        <button>Configuración</button>
+      </nav>
+    </aside>
+
+
+    <main class="main-content">
+      <header>
+        <h1>Punto de Venta</h1>
+        <h3>Proveedores</h3>
+      </header>
+
+
+      <section class="form-producto">
+        <label>RFC:</label>
+        <input type="text" id="rfc" />
+
+        <label>Empresa:</label>
+        <input type="text" id="empresa" />
+
+        <label>Telefono:</label>
+        <input type="number" id="telefono_proveedor" />
+
+        
+
+        <button id="btnAgregarCliente">Agregar</button>
+        <button id="btnBuscarCliente">Buscar</button>
+        <button id="btnEditarCliente">Editar</button>
+        <button id="btnEliminarCliente">Eliminar</button>
+        <div id="formulario-busqueda" style="display: none; margin-top: 1rem;">
+  <label>Buscar por RFC, Empresa o teléfono:</label>
+  <input type="text" id="terminoBusqueda" placeholder="Escribe tu búsqueda..." />
+  <button id="btnEjecutarBusqueda">Buscar</button>
+  <button id="btnCerrarBusqueda">Cancelar</button>
+  <span id="resultadoBusqueda" style="margin-left: 10px; font-weight: bold;"></span>
+</div>
+
+
+      <section class="tabla-articulos">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>RFC</th>
+              <th>Empresa</th>
+              <th>Telefono</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoTabla"></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+ 
+
+  <script src="Pscript.js"></script>
+</body>
+</html>
