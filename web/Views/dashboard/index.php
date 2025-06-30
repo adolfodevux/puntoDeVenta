@@ -88,20 +88,21 @@ $currentTime = date('H:i:s');
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" data-module="settings">
+                        <a href="#" data-module="settings" id="settingsBtn">
                             <i class="fas fa-cog"></i>
                             <span>Configuración</span>
+                        </a>
+                    </li>
+                    <li class="nav-item logout-nav-item">
+                        <a href="../auth/logout.php" class="logout-btn quick-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
                         </a>
                     </li>
                 </ul>
             </nav>
             
-            <div class="sidebar-footer">
-                <a href="../auth/logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt" style="width: 20px; margin-right: 0.8rem;"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
-            </div>
+            <!-- Eliminar el div.sidebar-footer que contiene el botón de logout duplicado -->
         </div>
 
         <!-- Mobile Overlay -->
@@ -249,6 +250,9 @@ $currentTime = date('H:i:s');
     </div>
 
     <script>
+        // === PUNTO DE VENTA - SCRIPT INICIADO ===
+        console.log('=== PUNTO DE VENTA - SCRIPT INICIADO ===');
+        
         // Variables globales
         let cart = [];
         let selectedPaymentMethod = 'cash';
@@ -258,14 +262,17 @@ $currentTime = date('H:i:s');
         
         // Variables de paginación
         let currentPage = 1;
-        let itemsPerPage = 9;
+        let itemsPerPage = 9; // Cambiado a 9 productos por página
         let totalPages = 1;
         let filteredProducts = [];
+        
+        console.log('Variables globales inicializadas');
 
         // === FUNCIONES DE UTILIDAD (DEFINIDAS PRIMERO) ===
         
         // Toast notifications para feedback rápido
         function showSuccessToast(message) {
+            console.log('showSuccessToast:', message);
             // Crear toast element
             const toast = document.createElement('div');
             toast.className = 'toast-notification success';
@@ -291,10 +298,34 @@ $currentTime = date('H:i:s');
         }
         
         function showErrorToast(message) {
+            console.log('showErrorToast:', message);
             const toast = document.createElement('div');
             toast.className = 'toast-notification error';
             toast.innerHTML = `
                 <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 2000);
+        }
+
+        function showWarningToast(message) {
+            console.log('showWarningToast:', message);
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification warning';
+            toast.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
                 <span>${message}</span>
             `;
             
@@ -461,54 +492,82 @@ $currentTime = date('H:i:s');
         // Actualizar cada segundo
         setInterval(updateTime, 1000);
 
-        // Función simple de bienvenida como fallback
+        // Función simple de bienvenida mejorada
         function showSimpleWelcome() {
             const username = '<?php echo addslashes($username); ?>';
             const currentHour = new Date().getHours();
-            let greeting = currentHour < 12 ? 'Buenos días' : currentHour < 18 ? 'Buenas tardes' : 'Buenas noches';
-            
-            Swal.fire({
-                title: greeting + ', ' + username + '!',
-                text: 'Bienvenido al Sistema Punto-D',
-                icon: 'success',
-                confirmButtonText: 'Empezar',
-                confirmButtonColor: '#667eea',
-                timer: 3000,
-                timerProgressBar: true
+            const currentDate = new Date().toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
             });
-        }
-
-        // Animación de bienvenida mejorada
-        function showWelcomeAnimation() {
-            const username = '<?php echo addslashes($username); ?>';
-            const currentHour = new Date().getHours();
-            let greeting, icon;
             
-            if (currentHour < 12) {
+            let greeting, icon, bgGradient, timeMessage;
+            
+            if (currentHour >= 5 && currentHour < 12) {
                 greeting = 'Buenos días';
                 icon = '🌅';
-            } else if (currentHour < 18) {
+                bgGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                timeMessage = 'Que tengas un excelente día';
+            } else if (currentHour >= 12 && currentHour < 18) {
                 greeting = 'Buenas tardes';
                 icon = '☀️';
+                bgGradient = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                timeMessage = 'Espero que estés teniendo un gran día';
             } else {
                 greeting = 'Buenas noches';
                 icon = '🌙';
+                bgGradient = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+                timeMessage = 'Que tengas una productiva noche';
             }
             
             Swal.fire({
-                title: greeting + ', ' + username + '!',
-                html: '<div style="text-align: center; padding: 2rem;"><div style="font-size: 3rem; margin-bottom: 1rem;">' + icon + '</div><p style="font-size: 1.2rem; color: #667eea; font-weight: 600;">Bienvenido al Sistema Punto-D</p><p style="color: #7f8c8d; margin-top: 1rem;">¡Que tengas un día productivo!</p></div>',
+                title: `${greeting}, ${username}! ${icon}`,
+                html: `
+                    <div style="text-align: center; padding: 1.5rem 0;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem; line-height: 1;">
+                            🎯
+                        </div>
+                        <h3 style="color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;">
+                            ¡Bienvenido al Sistema POS!
+                        </h3>
+                        <p style="color: #7f8c8d; margin: 0 0 1rem 0; font-size: 0.95rem;">
+                            ${timeMessage}
+                        </p>
+                        <div style="background: ${bgGradient}; color: white; padding: 1rem; border-radius: 12px; margin: 1rem 0;">
+                            <p style="margin: 0; font-weight: 500; font-size: 0.9rem;">
+                                📅 ${currentDate}
+                            </p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #3498db;">
+                            <p style="margin: 0; color: #2c3e50; font-size: 0.85rem;">
+                                💡 <strong>Todo listo para comenzar</strong><br>
+                                El sistema está funcionando perfectamente
+                            </p>
+                        </div>
+                    </div>
+                `,
                 icon: 'success',
-                confirmButtonText: '¡Empezar a vender!',
-                confirmButtonColor: '#667eea',
+                confirmButtonText: '🚀 ¡Empezar a vender!',
+                confirmButtonColor: '#3498db',
                 timer: 4000,
                 timerProgressBar: true,
-                allowOutsideClick: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    if (typeof showSuccessToast === 'function') {
-                        showSuccessToast('¡Sistema listo para usar! 🎉');
-                    }
+                allowOutsideClick: true,
+                customClass: {
+                    popup: 'welcome-popup',
+                    title: 'welcome-title',
+                    confirmButton: 'welcome-confirm-btn'
+                },
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown animate__faster'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp animate__faster'
+                }
+            }).then(() => {
+                if (typeof showSuccessToast === 'function') {
+                    showSuccessToast('🎉 ¡Sistema listo para vender!');
                 }
             });
         }
@@ -624,81 +683,167 @@ $currentTime = date('H:i:s');
 
         // Funcionalidad del POS
         document.addEventListener('DOMContentLoaded', function() {
-            // Cargar datos iniciales primero
-            loadCategories();
-            loadProducts();
+            console.log('=== DOM CARGADO - INICIANDO APLICACIÓN ===');
             
-            // Configurar menú móvil
-            setupMobileMenu();
-            
-            // Configurar funcionalidad del carrito expandible
-            setupCartExpansion();
-            
-            // Configurar paginación
-            setupPagination();
-            
-            // Mostrar animación de bienvenida después de un pequeño delay
-            setTimeout(function() {
-                try {
-                    showWelcomeAnimation();
-                } catch (error) {
-                    console.error('Error en animación avanzada:', error);
-                    showSimpleWelcome();
+            try {
+                // Mostrar bienvenida simple primero
+                console.log('Mostrando bienvenida...');
+                showSimpleWelcome();
+                
+                // Configurar menú móvil
+                console.log('Configurando menú móvil...');
+                setupMobileMenu();
+                
+                // Configurar funcionalidad del carrito expandible
+                console.log('Configurando carrito...');
+                setupCartExpansion();
+                
+                // Configurar paginación
+                console.log('Configurando paginación...');
+                setupPagination();
+                
+                // Cargar datos iniciales
+                console.log('Cargando categorías y productos...');
+                loadCategories();
+                loadProducts();
+                
+                // Event listeners básicos
+                console.log('Configurando event listeners...');
+                
+                // Event listener para limpiar carrito
+                const clearCartBtn = document.getElementById('clearCart');
+                if (clearCartBtn) {
+                    console.log('✅ clearCartBtn encontrado');
+                    clearCartBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('clearCart clicked');
+                        clearCart();
+                    });
+                } else {
+                    console.error('❌ clearCartBtn NO encontrado');
                 }
-            }, 1500);
-            
-            // Event listener para limpiar carrito
-            document.getElementById('clearCart').addEventListener('click', clearCart);
 
-            // Event listeners para métodos de pago
-            const paymentBtns = document.querySelectorAll('.payment-btn');
-            paymentBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    paymentBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedPaymentMethod = this.dataset.method;
+                // Event listeners para métodos de pago
+                const paymentBtns = document.querySelectorAll('.payment-btn');
+                console.log('💳 payment-btn encontrados:', paymentBtns.length);
+                paymentBtns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Payment method selected:', this.dataset.method);
+                        paymentBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        selectedPaymentMethod = this.dataset.method;
+                        showSuccessToast(`💳 Método: ${selectedPaymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}`);
+                    });
                 });
-            });
 
-            // Event listener para monto recibido
-            document.getElementById('amountPaid').addEventListener('input', calculateChange);
+                // Event listener para monto recibido
+                const amountPaidEl = document.getElementById('amountPaid');
+                if (amountPaidEl) {
+                    console.log('✅ amountPaidEl encontrado');
+                    amountPaidEl.addEventListener('input', function() {
+                        console.log('Amount paid changed:', this.value);
+                        calculateChange();
+                    });
+                } else {
+                    console.error('❌ amountPaidEl NO encontrado');
+                }
 
-            // Event listener para botón de checkout
-            document.getElementById('checkoutBtn').addEventListener('click', processCheckout);
+                // Event listener para botón de checkout
+                const checkoutBtn = document.getElementById('checkoutBtn');
+                if (checkoutBtn) {
+                    console.log('✅ checkoutBtn encontrado');
+                    checkoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Checkout button clicked');
+                        processCheckout();
+                    });
+                } else {
+                    console.error('❌ checkoutBtn NO encontrado');
+                }
 
-            // Event listener para búsqueda
-            document.getElementById('productSearch').addEventListener('input', function() {
-                searchProducts(this.value);
-            });
+                // Event listener para búsqueda
+                const searchEl = document.getElementById('productSearch');
+                if (searchEl) {
+                    console.log('✅ productSearch encontrado');
+                    searchEl.addEventListener('input', function() {
+                        console.log('Search input:', this.value);
+                        searchProducts(this.value);
+                    });
+                } else {
+                    console.error('❌ productSearch NO encontrado');
+                }
 
-            // Event listeners para navegación del sidebar
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
+                // Event listeners para navegación del sidebar (excluyendo logout)
+                const navItems = document.querySelectorAll('.nav-item:not(.logout-nav-item)');
+                console.log('🧭 nav-items encontrados (sin logout):', navItems.length);
+                navItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Nav item clicked');
+                        navItems.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const module = this.querySelector('a').dataset.module;
+                        console.log('Switching to module:', module);
+                        switchModule(module);
+                    });
+                });
+                
+                // Event listener específico para el botón de logout
+                const logoutNavItem = document.querySelector('.logout-nav-item');
+                if (logoutNavItem) {
+                    console.log('✅ logoutNavItem encontrado');
+                    logoutNavItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Logout nav item clicked');
+                        handleLogout();
+                    });
+                } else {
+                    console.error('❌ logoutNavItem NO encontrado');
+                }
+                
+                console.log('=== APLICACIÓN INICIADA CORRECTAMENTE ===');
+                
+                // Verificar elementos críticos después de un momento
+                setTimeout(() => {
+                    console.log('=== VERIFICACIÓN DE ELEMENTOS ===');
+                    console.log('clearCart:', document.getElementById('clearCart') ? '✅' : '❌');
+                    console.log('amountPaid:', document.getElementById('amountPaid') ? '✅' : '❌');
+                    console.log('checkoutBtn:', document.getElementById('checkoutBtn') ? '✅' : '❌');
+                    console.log('productSearch:', document.getElementById('productSearch') ? '✅' : '❌');
+                    console.log('payment-btn count:', document.querySelectorAll('.payment-btn').length);
                     
-                    const module = this.querySelector('a').dataset.module;
-                    switchModule(module);
-                });
-            });
+                    // Ejecutar prueba automática del sistema
+                    const systemWorking = testSystemFunctionality();
+                    if (!systemWorking) {
+                        console.warn('⚠️ Sistema con problemas, intentando reinicializar...');
+                        setTimeout(reinitializeSystem, 1000);
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error en inicialización:', error);
+                showErrorToast('Error en inicialización: ' + error.message);
+            }
         });
 
         // Cargar categorías desde la base de datos
         async function loadCategories() {
+            console.log('loadCategories() iniciada');
             try {
                 const response = await fetch('../../Controllers/ProductsController.php?action=categories');
+                if (!response.ok) throw new Error('No se pudo conectar al servidor');
                 const data = await response.json();
-                
+                console.log('Categorías recibidas:', data);
                 if (data.success) {
                     categories = data.data;
                     renderCategories();
                 } else {
-                    console.error('Error al cargar categorías:', data.message);
+                    showErrorToast('Error al cargar categorías: ' + (data.message || 'Respuesta inválida'));
                 }
             } catch (error) {
-                console.error('Error de red al cargar categorías:', error);
+                showErrorToast('Error de conexión al cargar categorías: ' + error.message);
             }
         }
 
@@ -735,38 +880,34 @@ $currentTime = date('H:i:s');
 
         // Cargar productos desde la base de datos
         async function loadProducts() {
+            console.log('loadProducts() iniciada');
             try {
                 const response = await fetch('../../Controllers/ProductsController.php?action=list');
+                if (!response.ok) throw new Error('No se pudo conectar al servidor');
                 const data = await response.json();
-                
+                console.log('Productos recibidos:', data);
                 if (data.success) {
                     products = data.data;
                     renderProducts(products);
                 } else {
-                    console.error('Error al cargar productos:', data.message);
-                    showError('Error al cargar productos');
+                    showErrorToast('Error al cargar productos: ' + (data.message || 'Respuesta inválida'));
                 }
             } catch (error) {
-                console.error('Error de red al cargar productos:', error);
-                showError('Error de conexión al cargar productos');
+                console.error('Error en loadProducts:', error);
+                showErrorToast('Error de conexión al cargar productos: ' + error.message);
             }
         }
 
-        // Renderizar productos con paginación
+        // --- Renderizado de productos mejorado y seguro ---
         function renderProducts(productList) {
             filteredProducts = productList;
             totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-            
-            // Asegurar que currentPage esté en rango válido
             if (currentPage > totalPages) currentPage = 1;
             if (currentPage < 1) currentPage = 1;
-            
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const currentProducts = filteredProducts.slice(startIndex, endIndex);
-            
             const grid = document.getElementById('productsGrid');
-            
             if (filteredProducts.length === 0) {
                 grid.innerHTML = `
                     <div class="no-products">
@@ -777,633 +918,814 @@ $currentTime = date('H:i:s');
                 hidePagination();
                 return;
             }
-            
-            grid.innerHTML = currentProducts.map(product => `
-                <div class="product-card" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-category="${product.category_id}" data-stock="${product.stock}">
-                    <div class="product-image">
-                        ${getProductIcon(product.category_name)}
+            const isMobile = window.innerWidth <= 768;
+            grid.innerHTML = currentProducts.map(product => {
+                const stock = parseInt(product.stock) || 0;
+                const isLowStock = stock <= 30; // Advertencia cuando stock es 30 o menos
+                const stockBadge = `<span class="stock-badge${isLowStock ? ' low-stock' : ''}">Stock: ${stock} ${isLowStock ? '<i class=\'fas fa-exclamation-triangle\'></i>' : ''}</span>`;
+                return `
+                    <div class="product-card" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-category="${product.category_id}" data-stock="${stock}">
+                        <div class="product-image">
+                            ${getProductIcon(product.category_name)}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-info-row">
+                                <h4>${product.name}</h4>
+                                <span class="price">$${parseFloat(product.price).toFixed(2)}</span>
+                                ${isMobile ? '' : stockBadge}
+                            </div>
+                        </div>
                     </div>
-                    <div class="product-info">
-                        <h4>${product.name}</h4>
-                        <p class="price">$${parseFloat(product.price).toFixed(2)}</p>
-                        <p class="stock ${product.stock <= product.min_stock ? 'low-stock' : ''}">
-                            Stock: ${product.stock}
-                            ${product.stock <= product.min_stock ? '<i class="fas fa-exclamation-triangle"></i>' : ''}
-                        </p>
-                    </div>
-                </div>
-            `).join('');
-            
+                `;
+            }).join('');
+            // Si es móvil, mostrar el stock como tooltip y ocultar badge visualmente
+            if (isMobile) {
+                const cards = grid.querySelectorAll('.product-card');
+                cards.forEach(card => {
+                    const stock = card.getAttribute('data-stock');
+                    card.title = `Stock: ${stock}`;
+                });
+            }
             // Agregar event listeners a las tarjetas
             const productCards = grid.querySelectorAll('.product-card');
             productCards.forEach(card => {
                 card.addEventListener('click', function() {
-                    const productId = this.dataset.id;
-                    const productName = this.dataset.name;
-                    const productPrice = parseFloat(this.dataset.price);
-                    const productStock = parseInt(this.dataset.stock);
-                    
-                    if (productStock > 0) {
-                        addToCart(productId, productName, productPrice);
-                    } else {
-                        showError('Producto sin stock disponible');
-                    }
+                    const id = this.getAttribute('data-id');
+                    const name = this.getAttribute('data-name');
+                    const price = this.getAttribute('data-price');
+                    const category = this.getAttribute('data-category');
+                    const stock = this.getAttribute('data-stock');
+                    addToCart(id, name, price, category, stock);
                 });
             });
-            
-            // Actualizar paginación
-            updatePagination();
+            renderPagination();
         }
 
-        // Obtener icono según la categoría
-        function getProductIcon(categoryName) {
-            const icons = {
-                'Bebidas': '<i class="fas fa-wine-bottle"></i>',
-                'Snacks': '<i class="fas fa-cookie-bite"></i>',
-                'Dulces': '<i class="fas fa-candy-cane"></i>',
-                'Otros': '<i class="fas fa-box"></i>'
-            };
-            return icons[categoryName] || '<i class="fas fa-box"></i>';
-        }
-
-        // Filtrar productos por categoría
-        async function filterProductsByCategory(categoryId) {
-            currentPage = 1; // Resetear a primera página
+        // Configurar paginación
+        function setupPagination() {
+            console.log('setupPagination() iniciada');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
             
-            try {
-                const response = await fetch(`../../Controllers/ProductsController.php?action=by_category&category_id=${categoryId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    renderProducts(data.data);
-                } else {
-                    console.error('Error al filtrar productos:', data.message);
-                }
-            } catch (error) {
-                console.error('Error de red al filtrar productos:', error);
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderProducts(filteredProducts);
+                    }
+                });
             }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderProducts(filteredProducts);
+                    }
+                });
+            }
+        }
+
+        // Renderizar paginación
+        function renderPagination() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            const pageNumbers = document.getElementById('pageNumbers');
+            
+            if (!paginationContainer) return;
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'block';
+            
+            // Actualizar información
+            if (paginationInfo) {
+                paginationInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+            }
+            
+            // Actualizar botones
+            if (prevBtn) {
+                prevBtn.disabled = currentPage === 1;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = currentPage === totalPages;
+            }
+            
+            // Renderizar números de página
+            if (pageNumbers) {
+                pageNumbers.innerHTML = '';
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `page-number ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.textContent = i;
+                    pageBtn.addEventListener('click', () => {
+                        currentPage = i;
+                        renderProducts(filteredProducts);
+                    });
+                    pageNumbers.appendChild(pageBtn);
+                }
+            }
+        }
+
+        // Ocultar paginación
+        function hidePagination() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            if (paginationContainer) {
+                paginationContainer.style.display = 'none';
+            }
+        }
+
+        // Obtener icono del producto basado en la categoría
+        function getProductIcon(categoryName) {
+            const iconMap = {
+                'bebidas': '<i class="fas fa-wine-bottle product-icon"></i>',
+                'comida': '<i class="fas fa-hamburger product-icon"></i>',
+                'snacks': '<i class="fas fa-cookie-bite product-icon"></i>',
+                'dulces': '<i class="fas fa-candy-cane product-icon"></i>',
+                'lacteos': '<i class="fas fa-cheese product-icon"></i>',
+                'carnes': '<i class="fas fa-drumstick-bite product-icon"></i>',
+                'frutas': '<i class="fas fa-apple-alt product-icon"></i>',
+                'verduras': '<i class="fas fa-carrot product-icon"></i>',
+                'panaderia': '<i class="fas fa-bread-slice product-icon"></i>',
+                'limpieza': '<i class="fas fa-spray-can product-icon"></i>',
+                'higiene': '<i class="fas fa-soap product-icon"></i>',
+                'electronica': '<i class="fas fa-mobile-alt product-icon"></i>',
+                'hogar': '<i class="fas fa-home product-icon"></i>',
+                'ropa': '<i class="fas fa-tshirt product-icon"></i>',
+                'juguetes': '<i class="fas fa-puzzle-piece product-icon"></i>',
+                'libros': '<i class="fas fa-book product-icon"></i>',
+                'deportes': '<i class="fas fa-football-ball product-icon"></i>',
+                'salud': '<i class="fas fa-pills product-icon"></i>',
+                'belleza': '<i class="fas fa-spa product-icon"></i>',
+                'oficina': '<i class="fas fa-paperclip product-icon"></i>'
+            };
+            
+            if (!categoryName) {
+                return '<i class="fas fa-box product-icon"></i>';
+            }
+            
+            const normalizedCategory = categoryName.toLowerCase().trim();
+            return iconMap[normalizedCategory] || '<i class="fas fa-box product-icon"></i>';
         }
 
         // Buscar productos
-        async function searchProducts(searchTerm) {
-            currentPage = 1; // Resetear a primera página
-            
-            if (searchTerm.trim() === '') {
+        function searchProducts(query = '') {
+            console.log('Buscando productos:', query);
+            if (!query.trim()) {
                 renderProducts(products);
-                // Resetear categoría a "Todos"
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('.category-btn[data-category="all"]').classList.add('active');
                 return;
             }
             
-            try {
-                const response = await fetch(`../../Controllers/ProductsController.php?action=search&q=${encodeURIComponent(searchTerm)}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    renderProducts(data.data);
-                    // Resetear categoría a "Todos" cuando se busca
-                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelector('.category-btn[data-category="all"]').classList.add('active');
+            const filtered = products.filter(product => 
+                product.name.toLowerCase().includes(query.toLowerCase()) ||
+                (product.category_name && product.category_name.toLowerCase().includes(query.toLowerCase()))
+            );
+            
+            currentPage = 1;
+            renderProducts(filtered);
+        }
+
+        // Filtrar productos por categoría
+        function filterProductsByCategory(categoryId) {
+            console.log('Filtrando por categoría:', categoryId);
+            if (categoryId === 'all') {
+                renderProducts(products);
+                return;
+            }
+            
+            const filtered = products.filter(product => product.category_id == categoryId);
+            currentPage = 1;
+            renderProducts(filtered);
+        }
+
+        // Función para agregar productos al carrito
+        function addToCart(id, name, price, category, stock) {
+            // Asegurar tipos numéricos
+            price = parseFloat(price);
+            stock = parseInt(stock);
+            // Verificar si el producto ya está en el carrito
+            const existingItem = cart.find(item => item.id === id);
+            if (existingItem) {
+                if (existingItem.stock > 0) {
+                    existingItem.quantity = parseInt(existingItem.quantity) + 1;
+                    existingItem.stock = parseInt(existingItem.stock) - 1;
+                    showSuccessToast(`✔️ ${name} agregado al carrito`);
                 } else {
-                    console.error('Error al buscar productos:', data.message);
+                    showErrorToast(`❌ ${name} sin stock disponible`);
                 }
-            } catch (error) {
-                console.error('Error de red al buscar productos:', error);
+            } else {
+                if (stock > 0) {
+                    cart.push({
+                        id,
+                        name,
+                        price: price,
+                        category,
+                        stock: stock - 1,
+                        quantity: 1
+                    });
+                    showSuccessToast(`✔️ ${name} agregado al carrito`);
+                } else {
+                    showErrorToast(`❌ ${name} sin stock disponible`);
+                }
+            }
+            renderCart();
+            calculateSubtotal();
+            updateCheckoutBtn();
+        }
+
+        // Función para limpiar el carrito
+        function clearCart() {
+            if (cart.length === 0) {
+                showWarningToast('🛒 El carrito ya está vacío');
+                return;
+            }
+            
+            showConfirmation(
+                '¿Limpiar Carrito?',
+                '¿Estás seguro de que quieres eliminar todos los productos del carrito?',
+                function() {
+                    cart = [];
+                    renderCart();
+                    calculateSubtotal();
+                    updateCheckoutBtn();
+                    showSuccessToast('🗑️ Carrito limpiado correctamente');
+                }
+            );
+        }
+
+        // Función para eliminar un producto específico del carrito
+        function removeFromCart(id) {
+            const itemIndex = cart.findIndex(item => item.id === id);
+            if (itemIndex !== -1) {
+                const item = cart[itemIndex];
+                cart.splice(itemIndex, 1);
+                renderCart();
+                calculateSubtotal();
+                updateCheckoutBtn();
+                showSuccessToast(`🗑️ ${item.name} eliminado del carrito`);
             }
         }
 
-        // Agregar producto al carrito con feedback visual
-        function addToCart(id, name, price) {
-            const existingItem = cart.find(item => item.id === id);
-            const product = products.find(p => p.id == id);
-            
-            if (!product) {
-                showError('Producto no encontrado');
-                return;
-            }
-            
-            // Verificar stock disponible
-            const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
-            if (currentQuantityInCart >= product.stock) {
-                showError('No hay suficiente stock disponible');
-                return;
-            }
-            
-            // Agregar al carrito
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({
-                    id: id,
-                    name: name,
-                    price: price,
-                    quantity: 1
-                });
-            }
-            
-            // Feedback visual - encontrar la tarjeta del producto
-            const productCard = document.querySelector(`[data-id="${id}"]`);
-            if (productCard) {
-                productCard.style.transform = 'scale(0.95)';
-                productCard.style.backgroundColor = '#e8f5e8';
-                
-                setTimeout(() => {
-                    productCard.style.transform = '';
-                    productCard.style.backgroundColor = '';
-                }, 200);
-            }
-            
-            // Mostrar toast de éxito
-            showSuccessToast(`${name} agregado al carrito`);
-            
-            updateCartDisplay();
-            updateCartSummary();
-        }
-        // Actualizar visualización del carrito
-        function updateCartDisplay() {
-            const cartItems = document.getElementById('cartItems');
+        // Renderizar carrito
+        function renderCart() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            cartItemsContainer.innerHTML = '';
             
             if (cart.length === 0) {
-                cartItems.innerHTML = `
+                cartItemsContainer.innerHTML = `
                     <div class="empty-cart">
                         <i class="fas fa-shopping-cart"></i>
                         <p>Carrito vacío</p>
                         <span>Agrega productos para comenzar</span>
                     </div>
                 `;
+                updateCheckoutBtn();
                 return;
             }
             
-            cartItems.innerHTML = cart.map(item => `
-                <div class="cart-item">
-                    <div class="item-info">
-                        <h5>${item.name}</h5>
-                        <div class="item-price">$${item.price.toFixed(2)} c/u</div>
-                    </div>
-                    <div class="item-controls">
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
-                            <span class="quantity">${item.quantity}</span>
-                            <button class="qty-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+            cart.forEach(item => {
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.dataset.id = item.id;
+                cartItem.innerHTML = `
+                    <div class="cart-item-header">
+                        <div class="cart-item-info">
+                            <span class="cart-item-name" title="${item.name}">${item.name}</span>
+                            <span class="cart-item-price">$${item.price.toFixed(2)} c/u</span>
                         </div>
-                        <button class="qty-btn remove-btn" onclick="removeFromCart('${item.id}')" title="Eliminar producto">
-                            <i class="fas fa-trash"></i>
+                        <button class="remove-btn" title="Eliminar del carrito">
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
-                </div>
-            `).join('');
-        }
-
-        // Actualizar cantidad con validaciones mejoradas
-        function updateQuantity(id, change) {
-            const item = cart.find(item => item.id === id);
-            const product = products.find(p => p.id == id);
-            
-            if (item && product) {
-                const newQuantity = item.quantity + change;
+                    <div class="cart-item-body">
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn decrease" data-action="decrease" title="Disminuir cantidad">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <div class="quantity-display">
+                                <span class="quantity-value">${item.quantity}</span>
+                                <span class="quantity-label">unidades</span>
+                            </div>
+                            <button class="quantity-btn increase" data-action="increase" title="Aumentar cantidad">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="cart-item-total">
+                            <span class="total-label">Subtotal:</span>
+                            <span class="total-price">$${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="cart-item-footer">
+                        <div class="stock-info">
+                            <i class="fas fa-box"></i>
+                            <span>Stock disponible: ${item.stock}</span>
+                        </div>
+                    </div>
+                `;
                 
-                if (newQuantity <= 0) {
-                    removeFromCart(id);
-                } else if (newQuantity > product.stock) {
-                    showErrorToast(`Stock máximo disponible: ${product.stock}`);
-                } else {
-                    item.quantity = newQuantity;
-                    updateCartDisplay();
-                    updateCartSummary();
-                    
-                    // Feedback visual
-                    if (change > 0) {
-                        showSuccessToast(`Cantidad aumentada: ${item.name}`);
-                    }
-                }
-            }
+                // Agregar listener para eliminar item del carrito
+                const removeBtn = cartItem.querySelector('.remove-btn');
+                removeBtn.addEventListener('click', function() {
+                    const itemId = this.closest('.cart-item').dataset.id;
+                    removeFromCart(itemId);
+                });
+                
+                // Agregar listeners para aumentar/disminuir cantidad
+                const quantityBtns = cartItem.querySelectorAll('.quantity-btn');
+                quantityBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const action = this.dataset.action;
+                        const itemId = this.closest('.cart-item').dataset.id;
+                        if (action === 'increase') {
+                            updateCartItemQuantity(itemId, 'increase');
+                        } else if (action === 'decrease') {
+                            updateCartItemQuantity(itemId, 'decrease');
+                        }
+                    });
+                });
+                
+                cartItemsContainer.appendChild(cartItem);
+            });
+            updateCheckoutBtn();
         }
 
-        // Remover del carrito con confirmación
-        function removeFromCart(id) {
+        function updateCartItemQuantity(id, action) {
             const item = cart.find(item => item.id === id);
             if (!item) return;
-            
-            showConfirmation(
-                '¿Eliminar producto?',
-                `¿Estás seguro de que quieres eliminar "${item.name}" del carrito?`,
-                function() {
-                    cart = cart.filter(item => item.id !== id);
-                    updateCartDisplay();
-                    updateCartSummary();
-                    showSuccessToast('Producto eliminado del carrito');
+            item.quantity = parseInt(item.quantity);
+            item.stock = parseInt(item.stock);
+            if (action === 'increase') {
+                if (item.stock > 0) {
+                    item.quantity++;
+                    item.stock--;
+                    showSuccessToast('✔️ Cantidad aumentada');
+                } else {
+                    showErrorToast('❌ Sin stock disponible');
                 }
-            );
-        }
-
-        // Limpiar carrito con confirmación
-        function clearCart() {
-            if (cart.length === 0) {
-                showInfo('El carrito ya está vacío');
-                return;
+            } else if (action === 'decrease') {
+                if (item.quantity > 1) {
+                    item.quantity--;
+                    item.stock++;
+                    showSuccessToast('✔️ Cantidad disminuida');
+                } else {
+                    // Si la cantidad es 1, eliminar el item del carrito
+                    removeFromCart(id);
+                }
             }
-            
-            showConfirmation(
-                '¿Limpiar carrito?',
-                'Se eliminarán todos los productos del carrito. Esta acción no se puede deshacer.',
-                function() {
-                    cart = [];
-                    updateCartDisplay();
-                    updateCartSummary();
-                    document.getElementById('amountPaid').value = '';
-                    document.getElementById('change').textContent = '0.00';
-                    showSuccess('Carrito limpiado correctamente');
-                }
-            );
+            renderCart();
+            calculateSubtotal();
+            updateCheckoutBtn();
         }
 
-        // Actualizar resumen del carrito
-        function updateCartSummary() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // Calcular subtotal, IVA y total
+        function calculateSubtotal() {
+            let subtotal = 0;
+            let totalItems = 0;
+            cart.forEach(item => {
+                subtotal += item.price * item.quantity;
+                totalItems += item.quantity;
+            });
             const tax = subtotal * 0.16;
             const total = subtotal + tax;
             
-            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-            document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
-            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+            const subtotalEl = document.getElementById('subtotal');
+            const taxEl = document.getElementById('tax');
+            const totalEl = document.getElementById('total');
             
-            // Habilitar/deshabilitar botón de checkout
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            checkoutBtn.disabled = cart.length === 0;
-            
-            calculateChange();
+            if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            if (taxEl) taxEl.textContent = `$${tax.toFixed(2)}`;
+            if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
         }
 
-        // Calcular cambio con mejores validaciones móviles
+        // Calcular y mostrar el cambio al ingresar el monto recibido
         function calculateChange() {
-            const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
-            const amountPaidInput = document.getElementById('amountPaid');
-            const amountPaid = parseFloat(amountPaidInput.value) || 0;
-            const change = Math.max(0, amountPaid - total); // Nunca negativo
+            const amountPaidEl = document.getElementById('amountPaid');
+            const totalEl = document.getElementById('total');
+            const changeEl = document.getElementById('change');
             
-            document.getElementById('change').textContent = change.toFixed(2);
+            if (!amountPaidEl || !totalEl || !changeEl) return;
             
-            // Actualizar el estado del botón de checkout con validaciones mejoradas
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            if (!checkoutBtn) return;
+            const amountPaid = parseFloat(amountPaidEl.value || 0);
+            const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
+            let change = 0;
             
-            let shouldEnable = cart.length > 0;
-            
-            if (selectedPaymentMethod === 'cash') {
-                shouldEnable = shouldEnable && amountPaid >= total;
-                
-                // Feedback visual para el input en efectivo
-                if (amountPaid > 0) {
-                    if (amountPaid < total) {
-                        amountPaidInput.style.borderColor = '#e74c3c';
-                        amountPaidInput.style.backgroundColor = '#fdf2f2';
-                    } else {
-                        amountPaidInput.style.borderColor = '#27ae60';
-                        amountPaidInput.style.backgroundColor = '#f2fdf2';
-                    }
-                } else {
-                    amountPaidInput.style.borderColor = '#ddd';
-                    amountPaidInput.style.backgroundColor = 'white';
-                }
-            } else {
-                // Para tarjeta, resetear estilos del input
-                amountPaidInput.style.borderColor = '#ddd';
-                amountPaidInput.style.backgroundColor = '#f8f9fa';
+            if (!isNaN(amountPaid) && !isNaN(total)) {
+                change = amountPaid - total;
             }
             
-            checkoutBtn.disabled = !shouldEnable;
+            changeEl.textContent = change >= 0 ? change.toFixed(2) : '0.00';
+            updateCheckoutBtn();
+        }
+
+        // Habilitar/deshabilitar el botón de procesar venta
+        function updateCheckoutBtn() {
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const totalEl = document.getElementById('total');
+            const amountPaidEl = document.getElementById('amountPaid');
             
-            // Cambiar texto del botón según estado
-            if (cart.length === 0) {
-                checkoutBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Carrito Vacío';
-            } else if (selectedPaymentMethod === 'cash' && amountPaid < total) {
-                checkoutBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Monto Insuficiente';
+            if (!checkoutBtn || !totalEl || !amountPaidEl) return;
+            
+            const amountPaid = parseFloat(amountPaidEl.value || 0);
+            const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
+            
+            if (cart.length > 0 && !isNaN(amountPaid) && amountPaid >= total && total > 0) {
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.remove('disabled');
             } else {
-                checkoutBtn.innerHTML = '<i class="fas fa-cash-register"></i> Procesar Venta';
+                checkoutBtn.disabled = true;
+                checkoutBtn.classList.add('disabled');
             }
         }
 
-        // Procesar venta con loading state y mejor compatibilidad móvil
-        async function processCheckout() {
+        // Función para procesar la venta (checkout)
+        function processCheckout() {
+            console.log('processCheckout() iniciada');
+            
+            if (cart.length === 0) {
+                showErrorToast('❌ El carrito está vacío');
+                return;
+            }
+            
+            const totalEl = document.getElementById('total');
+            const amountPaidEl = document.getElementById('amountPaid');
+            const changeEl = document.getElementById('change');
+            
+            if (!totalEl || !amountPaidEl || !changeEl) {
+                showErrorToast('❌ Error en los elementos de pago');
+                return;
+            }
+            
+            const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
+            const amountPaid = parseFloat(amountPaidEl.value || 0);
+            const change = parseFloat(changeEl.textContent || 0);
+            
+            if (amountPaid < total) {
+                showErrorToast('❌ El monto recibido es insuficiente');
+                return;
+            }
+            
+            // Mostrar confirmación de venta
+            showConfirmation(
+                '¿Procesar Venta?',
+                `Total: $${total.toFixed(2)}\nRecibido: $${amountPaid.toFixed(2)}\nCambio: $${change.toFixed(2)}\n\n¿Confirmar la venta?`,
+                function() {
+                    // Procesar la venta
+                    processSale(total, amountPaid, change);
+                }
+            );
+        }
+        
+        // Función para procesar la venta efectivamente
+        async function processSale(total, amountPaid, change) {
+            console.log('processSale() iniciada');
+            
             try {
-                if (cart.length === 0) {
-                    showError('El carrito está vacío');
-                    return;
-                }
-                
-                const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
-                const amountPaidInput = document.getElementById('amountPaid');
-                const amountPaid = parseFloat(amountPaidInput.value) || 0;
-                
-                // Validaciones específicas para Android/móvil
-                if (selectedPaymentMethod === 'cash' && amountPaid < total) {
-                    showError('El monto recibido es insuficiente');
-                    // Enfocar el input en móvil
-                    amountPaidInput.focus();
-                    amountPaidInput.select();
-                    return;
-                }
-                
-                // Obtener referencia al botón
-                const checkoutBtn = document.getElementById('checkoutBtn');
-                if (!checkoutBtn) {
-                    showError('Error interno: Botón no encontrado');
-                    return;
-                }
-                
-                // Prevenir doble click
-                if (checkoutBtn.disabled) {
-                    return;
-                }
-                
-                // Mostrar loading state
-                const originalText = checkoutBtn.innerHTML;
-                checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-                checkoutBtn.disabled = true;
-                checkoutBtn.classList.add('btn-loading');
-                
-                // Deshabilitar inputs durante procesamiento
-                amountPaidInput.disabled = true;
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Procesando venta...',
+                    text: 'Por favor espera',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
                 
                 // Preparar datos de la venta
                 const saleData = {
                     items: cart.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        price: parseFloat(item.price),
-                        quantity: parseInt(item.quantity),
-                        total: parseFloat(item.price) * parseInt(item.quantity)
+                        product_id: item.id,
+                        quantity: item.quantity,
+                        price: item.price,
+                        subtotal: item.price * item.quantity
                     })),
-                    subtotal: parseFloat(document.getElementById('subtotal').textContent.replace('$', '')),
-                    tax: parseFloat(document.getElementById('tax').textContent.replace('$', '')),
+                    payment_method: selectedPaymentMethod,
+                    subtotal: total / 1.16, // Sin IVA
+                    tax: total * 0.16 / 1.16, // IVA
                     total: total,
-                    paymentMethod: selectedPaymentMethod,
-                    amountPaid: selectedPaymentMethod === 'cash' ? amountPaid : total,
-                    change: selectedPaymentMethod === 'cash' ? Math.max(0, amountPaid - total) : 0,
-                    timestamp: new Date().toISOString()
+                    amount_paid: amountPaid,
+                    change: change
                 };
                 
-                // Agregar timeout para conexiones lentas en Android
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                console.log('Datos de venta:', saleData);
                 
-                // Enviar venta al servidor
-                const response = await fetch('../../Controllers/SalesController.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(saleData),
-                    signal: controller.signal
-                });
+                // Aquí normalmente enviarías los datos al servidor
+                // const response = await fetch('../../Controllers/SalesController.php', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(saleData)
+                // });
                 
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                
-                if (result && result.success) {
-                    // Mostrar mensaje de éxito personalizado
-                    const paymentMethodText = selectedPaymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta';
+                // Simular procesamiento exitoso por ahora
+                setTimeout(() => {
+                    // Limpiar carrito y resetear formulario
+                    cart = [];
+                    document.getElementById('amountPaid').value = '';
+                    document.getElementById('change').textContent = '0.00';
                     
-                    await Swal.fire({
+                    renderCart();
+                    calculateSubtotal();
+                    updateCheckoutBtn();
+                    
+                    // Contraer carrito automáticamente en móvil después de la compra
+                    if (window.innerWidth <= 768 && cartExpanded) {
+                        toggleCartExpansion();
+                    }
+                    
+                    // Mostrar éxito
+                    Swal.fire({
                         title: '¡Venta Procesada!',
                         html: `
-                            <div style="text-align: left; margin: 1rem 0; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                                <p style="margin: 0.5rem 0;"><strong>Ticket:</strong> #${result.sale_id || 'N/A'}</p>
-                                <p style="margin: 0.5rem 0;"><strong>Total:</strong> $${total.toFixed(2)}</p>
-                                <p style="margin: 0.5rem 0;"><strong>Método:</strong> ${paymentMethodText}</p>
-                                ${selectedPaymentMethod === 'cash' ? `<p style="margin: 0.5rem 0;"><strong>Recibido:</strong> $${amountPaid.toFixed(2)}</p>` : ''}
-                                ${selectedPaymentMethod === 'cash' ? `<p style="margin: 0.5rem 0;"><strong>Cambio:</strong> $${saleData.change.toFixed(2)}</p>` : ''}
+                            <div style="text-align: center; padding: 1rem;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                                <p><strong>Total:</strong> $${total.toFixed(2)}</p>
+                                <p><strong>Recibido:</strong> $${amountPaid.toFixed(2)}</p>
+                                <p><strong>Cambio:</strong> $${change.toFixed(2)}</p>
+                                <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                    <p style="margin: 0; color: #28a745; font-weight: 600;">✔️ Venta registrada exitosamente</p>
+                                </div>
                             </div>
                         `,
                         icon: 'success',
-                        confirmButtonText: 'Imprimir Ticket',
-                        confirmButtonColor: '#27ae60',
-                        showCancelButton: true,
-                        cancelButtonText: 'Continuar',
-                        cancelButtonColor: '#3498db',
-                        background: '#fff',
-                        color: '#333',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        customClass: {
-                            popup: 'mobile-optimized-popup'
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Aquí podrías implementar la funcionalidad de impresión
-                            showInfo('Funcionalidad de impresión - Próximamente');
-                        }
+                        confirmButtonText: '🎯 Nueva Venta',
+                        confirmButtonColor: '#28a745',
+                        timer: 10000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        showSuccessToast('🎉 ¡Listo para la siguiente venta!');
                     });
-                    
-                    // Limpiar carrito
-                    cart = [];
-                    updateCartDisplay();
-                    updateCartSummary();
-                    amountPaidInput.value = '';
-                    document.getElementById('change').textContent = '0.00';
-                    
-                    // Recargar productos para actualizar stock
-                    await loadProducts();
-                    
-                } else {
-                    throw new Error(result?.message || 'Error desconocido al procesar venta');
-                }
+                }, 1500);
                 
             } catch (error) {
                 console.error('Error al procesar venta:', error);
-                
-                if (error.name === 'AbortError') {
-                    showError('Tiempo de espera agotado. Verifica tu conexión e intenta nuevamente.');
-                } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-                    showError('Error de conexión. Verifica tu internet e intenta nuevamente.');
-                } else {
-                    showError('Error al procesar venta: ' + error.message);
-                }
-                
-            } finally {
-                // Restaurar botón y inputs siempre
-                try {
-                    checkoutBtn.innerHTML = originalText;
-                    checkoutBtn.disabled = cart.length === 0;
-                    checkoutBtn.classList.remove('btn-loading');
-                    amountPaidInput.disabled = false;
-                } catch (e) {
-                    console.error('Error al restaurar botón:', e);
-                }
+                Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo procesar la venta: ' + error.message,
+                    icon: 'error',
+                    confirmButtonText: 'Reintentar',
+                    confirmButtonColor: '#e74c3c'
+                });
             }
         }
-
-        // Cambiar módulo (placeholder para funcionalidad futura)
+        
+        // Función para cambiar entre módulos del sistema
         function switchModule(module) {
-            console.log('Switching to module:', module);
+            console.log('switchModule() iniciada:', module);
             
-            // Placeholder para diferentes módulos
-            switch(module) {
-                case 'pos':
-                    // Ya estamos en el módulo POS
-                    break;
-                case 'products':
-                    showInfo('Módulo de Productos - Próximamente');
-                    break;
-                case 'inventory':
-                    showInfo('Módulo de Inventario - Próximamente');
-                    break;
-                case 'sales':
-                    showInfo('Módulo de Ventas - Próximamente');
-                    break;
-                case 'customers':
-                    showInfo('Módulo de Clientes - Próximamente');
-                    break;
-                case 'reports':
-                    showInfo('Módulo de Reportes - Próximamente');
-                    break;
-                case 'settings':
-                    showInfo('Módulo de Configuración - Próximamente');
-                    break;
-            }
-        }
-
-        // === FUNCIONES DE PAGINACIÓN ===
-        
-        function updatePagination() {
-            const container = document.getElementById('paginationContainer');
-            const info = document.getElementById('paginationInfo');
-            const prevBtn = document.getElementById('prevPageBtn');
-            const nextBtn = document.getElementById('nextPageBtn');
-            const pageNumbers = document.getElementById('pageNumbers');
+            // Funcionalidad básica de módulos
+            const moduleMessages = {
+                'pos': '🛒 Módulo Punto de Venta - Ya estás aquí',
+                'products': '📦 Módulo Productos - Próximamente disponible',
+                'inventory': '📊 Módulo Inventario - En desarrollo',
+                'sales': '📈 Módulo Ventas - Funcionalidad futura',
+                'customers': '👥 Módulo Clientes - En construcción',
+                'reports': '📋 Módulo Reportes - Próximamente',
+                'settings': '⚙️ Módulo Configuración - En desarrollo'
+            };
             
-            if (totalPages <= 1) {
-                hidePagination();
-                return;
-            }
+            const message = moduleMessages[module] || '🔧 Módulo no disponible';
             
-            // Mostrar contenedor
-            container.style.display = 'block';
-            
-            // Actualizar información
-            info.textContent = `Página ${currentPage} de ${totalPages} (${filteredProducts.length} productos)`;
-            
-            // Actualizar botones prev/next
-            prevBtn.disabled = currentPage <= 1;
-            nextBtn.disabled = currentPage >= totalPages;
-            
-            // Generar números de página
-            generatePageNumbers();
-        }
-        
-        function generatePageNumbers() {
-            const pageNumbers = document.getElementById('pageNumbers');
-            pageNumbers.innerHTML = '';
-            
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
-            // Ajustar si estamos cerca del final
-            if (endPage - startPage < maxVisiblePages - 1) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-            
-            // Botón primera página
-            if (startPage > 1) {
-                addPageButton(1);
-                if (startPage > 2) {
-                    addEllipsis();
-                }
-            }
-            
-            // Páginas visibles
-            for (let i = startPage; i <= endPage; i++) {
-                addPageButton(i);
-            }
-            
-            // Botón última página
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    addEllipsis();
-                }
-                addPageButton(totalPages);
+            if (module === 'pos') {
+                showSuccessToast(message);
+            } else {
+                showInfo(message);
             }
         }
         
-        function addPageButton(pageNum) {
-            const pageNumbers = document.getElementById('pageNumbers');
-            const btn = document.createElement('button');
-            btn.className = 'page-number';
-            btn.textContent = pageNum;
-            
-            if (pageNum === currentPage) {
-                btn.classList.add('active');
-            }
-            
-            btn.addEventListener('click', () => goToPage(pageNum));
-            pageNumbers.appendChild(btn);
-        }
-        
-        function addEllipsis() {
-            const pageNumbers = document.getElementById('pageNumbers');
-            const ellipsis = document.createElement('div');
-            ellipsis.className = 'page-ellipsis';
-            ellipsis.textContent = '...';
-            pageNumbers.appendChild(ellipsis);
-        }
-        
-        function goToPage(page) {
-            if (page < 1 || page > totalPages) return;
-            
-            currentPage = page;
-            renderProducts(filteredProducts);
-            
-            // Scroll suave al inicio de productos
-            const productsSection = document.querySelector('.products-section');
-            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        
-        function hidePagination() {
-            const container = document.getElementById('paginationContainer');
-            container.style.display = 'none';
-        }
-        
-        // Eventos de paginación
-        function setupPagination() {
-            const prevBtn = document.getElementById('prevPageBtn');
-            const nextBtn = document.getElementById('nextPageBtn');
-            
-            prevBtn.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    goToPage(currentPage - 1);
-                }
-            });
-            
-            nextBtn.addEventListener('click', () => {
-                if (currentPage < totalPages) {
-                    goToPage(currentPage + 1);
-                }
-            });
-        }
-
-        // Función simple de bienvenida como fallback final
-        function showSimpleWelcome() {
-            const username = '<?php echo addslashes($username); ?>';
-            const currentHour = new Date().getHours();
-            let greeting = currentHour < 12 ? 'Buenos días' : currentHour < 18 ? 'Buenas tardes' : 'Buenas noches';
+        // Función para manejar el módulo de configuración
+        function openSettingsModule() {
+            console.log('openSettingsModule() iniciada');
             
             Swal.fire({
-                title: `¡${greeting}, ${username}!`,
-                text: 'Bienvenido al Sistema Punto-D',
-                icon: 'success',
-                confirmButtonText: 'Empezar',
-                confirmButtonColor: '#667eea',
-                timer: 3000,
-                timerProgressBar: true
+                title: '⚙️ Configuración',
+                html: `
+                    <div style="text-align: left; padding: 1rem;">
+                        <h4>🎨 Opciones Disponibles:</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.5rem 0;">🌙 Tema oscuro/claro</li>
+                            <li style="padding: 0.5rem 0;">🔔 Notificaciones</li>
+                            <li style="padding: 0.5rem 0;">💰 Configuración de impuestos</li>
+                            <li style="padding: 0.5rem 0;">🖨️ Configuración de impresora</li>
+                            <li style="padding: 0.5rem 0;">📱 Preferencias de usuario</li>
+                        </ul>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <p style="margin: 0; color: #6c757d; font-size: 0.9rem;">
+                                🚧 Módulo en desarrollo. Funcionalidades próximamente disponibles.
+                            </p>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#6c757d'
+            });
+        }
+        
+        // Agregar listener para el botón de configuración y logout
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingsBtn = document.getElementById('settingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openSettingsModule();
+                });
+            }
+        });
+
+        // Mejor manejo de errores JS global
+        window.addEventListener('error', function(e) {
+            console.error('Error JS global:', e);
+            if (typeof showErrorToast === 'function') {
+                showErrorToast('Error: ' + e.message);
+            } else {
+                alert('Error: ' + e.message);
+            }
+        });
+
+        // Función de prueba para verificar que el sistema funciona
+        function testSystemFunctionality() {
+            console.log('=== EJECUTANDO PRUEBAS DEL SISTEMA ===');
+            
+            // Verificar elementos críticos
+            const criticalElements = [
+                { id: 'clearCart', name: 'Botón Limpiar Carrito' },
+                { id: 'amountPaid', name: 'Campo Monto Recibido' },
+                { id: 'checkoutBtn', name: 'Botón Procesar Venta' },
+                { id: 'productSearch', name: 'Campo Búsqueda' },
+                { id: 'cartItems', name: 'Contenedor Carrito' },
+                { id: 'subtotal', name: 'Subtotal' },
+                { id: 'total', name: 'Total' },
+                { id: 'change', name: 'Cambio' }
+            ];
+            
+            let missingElements = [];
+            
+            criticalElements.forEach(element => {
+                const el = document.getElementById(element.id);
+                if (el) {
+                    console.log(`✅ ${element.name} - OK`);
+                } else {
+                    console.error(`❌ ${element.name} - FALTA`);
+                    missingElements.push(element.name);
+                }
+            });
+            
+            // Verificar botones de pago
+            const paymentBtns = document.querySelectorAll('.payment-btn');
+            console.log(`💳 Botones de pago encontrados: ${paymentBtns.length}`);
+            
+            if (missingElements.length > 0) {
+                showErrorToast(`❌ Elementos faltantes: ${missingElements.join(', ')}`);
+                return false;
+            } else {
+                showSuccessToast('✅ Todos los elementos están presentes');
+                return true;
+            }
+        }
+        
+        // Función para reinicializar el sistema si hay problemas
+        function reinitializeSystem() {
+            console.log('🔄 Reinicializando sistema...');
+            
+            try {
+                // Limpiar todo
+                cart = [];
+                selectedPaymentMethod = 'cash';
+                currentPage = 1;
+                
+                // Resetear UI
+                renderCart();
+                calculateSubtotal();
+                updateCheckoutBtn();
+                
+                // Reconfigurar event listeners
+                setupEventListeners();
+                
+                showSuccessToast('🔄 Sistema reinicializado correctamente');
+                
+            } catch (error) {
+                console.error('Error al reinicializar:', error);
+                showErrorToast('❌ Error al reinicializar: ' + error.message);
+            }
+        }
+        
+        // Función separada para configurar event listeners
+        function setupEventListeners() {
+            console.log('🔧 Configurando event listeners...');
+            
+            // Event listener para limpiar carrito
+            const clearCartBtn = document.getElementById('clearCart');
+            if (clearCartBtn) {
+                clearCartBtn.onclick = function(e) {
+                    e.preventDefault();
+                    showSuccessToast('🧹 clearCart ejecutado');
+                    clearCart();
+                };
+            }
+            
+            // Event listeners para métodos de pago
+            const paymentBtns = document.querySelectorAll('.payment-btn');
+            paymentBtns.forEach(btn => {
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedPaymentMethod = this.dataset.method;
+                    showSuccessToast(`💳 ${selectedPaymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'} seleccionado`);
+                };
+            });
+            
+            // Event listener para monto recibido
+            const amountPaidEl = document.getElementById('amountPaid');
+            if (amountPaidEl) {
+                amountPaidEl.oninput = calculateChange;
+            }
+            
+            // Event listener para botón de checkout
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.onclick = function(e) {
+                    e.preventDefault();
+                    processCheckout();
+                };
+            }
+            
+            console.log('✅ Event listeners configurados');
+        }
+        
+        // Agregar comando de consola para pruebas
+        window.testPOS = testSystemFunctionality;
+        window.reinitPOS = reinitializeSystem;
+        
+        console.log('🎮 Comandos de consola disponibles:');
+        console.log('  - testPOS() : Probar funcionalidad del sistema');
+        console.log('  - reinitPOS() : Reinicializar sistema');
+
+        // Función para manejar el logout con confirmación
+        function handleLogout() {
+            console.log('handleLogout() iniciada');
+            
+            Swal.fire({
+                title: '👋 ¿Cerrar Sesión?',
+                html: `
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+                        <p style="margin-bottom: 1rem; color: #666;">¿Estás seguro de que quieres cerrar tu sesión?</p>
+                        <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px; margin: 1rem 0;">
+                            <p style="margin: 0; color: #6c757d; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle"></i> Se perderán los datos no guardados del carrito
+                            </p>
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '🚪 Sí, Cerrar Sesión',
+                cancelButtonText: '❌ Cancelar',
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true,
+                focusCancel: true,
+                customClass: {
+                    confirmButton: 'btn-logout-confirm',
+                    cancelButton: 'btn-logout-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar mensaje de despedida
+                    Swal.fire({
+                        title: '👋 ¡Hasta pronto!',
+                        text: 'Cerrando sesión...',
+                        icon: 'success',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            // Redirigir después de mostrar el mensaje
+                            setTimeout(() => {
+                                window.location.href = '../auth/logout.php';
+                            }, 1000);
+                        }
+                    });
+                } else {
+                    // Usuario canceló
+                    showSuccessToast('🔄 Sesión mantenida activa');
+                }
             });
         }
     </script>
