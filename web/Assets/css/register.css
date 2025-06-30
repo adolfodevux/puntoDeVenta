@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punto-D</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <style>
-        body {
+body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
@@ -112,7 +103,7 @@
             object-fit: contain;
         }
 
-        .login-box {
+        .register-box {
             background-color: #555E5E;
             padding: 100px 30px 30px;
             border-radius: 15px;
@@ -152,6 +143,25 @@
             background-color: #E0E0E0;
         }
 
+        .input-group i {
+            color: #333;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .input-group input {
+            border: none;
+            background: none;
+            outline: none;
+            flex-grow: 1;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .input-group input::placeholder {
+            color: #666;
+        }
+
         .error-message {
             background-color: #FFD700;
             color: #333;
@@ -189,43 +199,36 @@
             margin-top: 10px;
         }
 
-        .input-group i {
-            color: #333;
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-
-        .input-group input {
-            border: none;
-            background: none;
-            outline: none;
-            flex-grow: 1;
-            font-size: 1em;
-            color: #333;
-        }
-
-        .input-group input::placeholder {
-            color: #666;
-        }
-
-        .register-link {
-            display: block;
-            color: #D3D3D3;
-            text-decoration: none;
-            margin-top: 15px;
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            margin-top: 10px;
             margin-bottom: 25px;
-            font-size: 1.1em;
-            font-family: 'Pacifico', cursive;
-            transition: color 0.3s ease, transform 0.2s ease-out;
+            padding-left: 15px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            accent-color: #D3D3D3;
+            transform: scale(1.1);
+        }
+
+        .checkbox-group label {
+            color: #D3D3D3;
+            font-size: 0.9em;
             cursor: pointer;
+            user-select: none;
+            transition: color 0.3s ease;
         }
 
-        .register-link:hover {
+        .checkbox-group label:hover {
             color: #E0E0E0;
-            transform: translateY(-5px);
         }
 
-        .login-button {
+        .register-button {
             background-color: #D3D3D3;
             color: #333;
             border: none;
@@ -238,16 +241,63 @@
             font-family: 'Pacifico', cursive;
         }
 
-        .login-button:hover {
+        .register-button:hover {
             background-color: #E0E0E0;
             color: #000;
             transform: translateY(-7px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
         }
 
-        .login-button:active {
+        .register-button:active {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilos para alertas */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            text-align: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .alert-error {
+            background-color: #ff6b6b;
+            color: white;
+            border: 1px solid #ff5252;
+        }
+
+        .alert-success {
+            background-color: #51cf66;
+            color: white;
+            border: 1px solid #40c057;
+        }
+
+        .login-link {
+            display: block;
+            color: #D3D3D3;
+            text-decoration: none;
+            margin-top: 15px;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+
+        .login-link:hover {
+            color: #E0E0E0;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -263,7 +313,7 @@
                 height: 120px;
                 margin-bottom: -60px;
             }
-            .login-box {
+            .register-box {
                 padding: 80px 20px 20px;
                 border-radius: 12px;
             }
@@ -280,12 +330,10 @@
             .input-group input {
                 font-size: 0.9em;
             }
-            .register-link {
-                font-size: 1em;
-                margin-top: 10px;
-                margin-bottom: 20px;
+            .checkbox-group label {
+                font-size: 0.9em;
             }
-            .login-button {
+            .register-button {
                 padding: 10px 30px;
                 font-size: 1.1em;
             }
@@ -300,106 +348,53 @@
                 height: 100px;
                 margin-bottom: -50px;
             }
-            .login-box {
+            .register-box {
                 padding: 60px 15px 15px;
             }
             .input-group {
                 border-radius: 20px;
             }
-            .login-button {
+            .register-button {
                 border-radius: 20px;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            Punto-D
-        </div>
-        <div class="profile-pic">
-            <img src="Tux (1).png" alt="Logo de Punto-D">
-        </div>
-        <div class="login-box">
-            <div class="form-group">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" placeholder="Usuario" id="usernameInput">
-                </div>
-                <span class="error-message" id="usernameError"></span>
-            </div>
 
-            <div class="form-group">
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Password" id="passwordInput">
-                </div>
-                <span class="error-message" id="passwordError"></span>
-            </div>
-            
-            <a href="registrarte.html" class="register-link">Regístrate</a>
-            <button class="login-button" id="loginButton">Acceder</button>
-        </div>
-    </div>
-
-    <script>
-        const loginButton = document.getElementById('loginButton');
-        const usernameInput = document.getElementById('usernameInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const usernameError = document.getElementById('usernameError');
-        const passwordError = document.getElementById('passwordError');
-
-        function showError(element, message) {
-            element.textContent = message;
-            element.classList.add('show'); 
+        /* Estilos mejorados para toggle de contraseña */
+        .toggle-password {
+            cursor: pointer;
+            color: #666;
+            margin-left: 10px;
+            transition: color 0.3s ease, transform 0.2s ease;
+            font-size: 1.1em;
         }
 
-        function hideError(element) {
-            element.textContent = '';
-            element.classList.remove('show');
+        .toggle-password:hover {
+            color: #333;
+            transform: scale(1.1);
         }
 
-        loginButton.addEventListener('click', function(event) {
-            event.preventDefault();
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
 
-            hideError(usernameError);
-            hideError(passwordError);
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+            accent-color: #6C8B8E;
+            cursor: pointer;
+        }
 
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
+        .checkbox-group label {
+            color: #D3D3D3;
+            font-size: 0.9em;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.3s ease;
+        }
 
-            let isValid = true;
-
-            if (username === '') {
-                showError(usernameError, 'Upss tu usuario es necesario');
-                isValid = false;
-            }
-
-            if (password === '') {
-                showError(passwordError, 'La contraseña es obligatoria');
-                isValid = false;
-            }
-
-            if (isValid) {
-                alert('¡Datos completos!');
-            }
-        });
-
-        usernameInput.addEventListener('input', function() {
-            hideError(usernameError);
-        });
-
-        passwordInput.addEventListener('input', function() {
-            hideError(passwordError);
-        });
-
-        usernameInput.addEventListener('focus', function() {
-            hideError(usernameError);
-        });
-
-        passwordInput.addEventListener('focus', function() {
-            hideError(passwordError);
-        });
-    </script>
-</body>
-</html>
+        .checkbox-group label:hover {
+            color: #E0E0E0;
+        }
