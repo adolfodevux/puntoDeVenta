@@ -198,7 +198,7 @@ body {
 
 .tux-logo-img {
     width: 3rem;
-    height: 3rem;
+    height: 6rem;
     animation: bounce 2s infinite;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
@@ -477,7 +477,9 @@ body {
     
     .tux-logo-img {
         width: 2.5rem;
-        height: 2.5rem;
+        height: 6rem;
+        animation: bounce 2s infinite;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
     
     .avatar-circle {

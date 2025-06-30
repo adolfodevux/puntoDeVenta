@@ -37,8 +37,8 @@ $currentTime = date('H:i:s');
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="logo-header">
-                         <img src="../../Assets/img/tux.png" alt="Tux Logo" class="tux-logo-img" width="40px">
+                <div class="logo-header" text-align="center">
+                         <img src="../../Assets/img/tux.png" alt="Tux Logo" class="tux-logo-img" width="40px" text-aling="center"> ">
                     <h2>Punto de venta</h2>
                 </div>
                 <div class="user-info">

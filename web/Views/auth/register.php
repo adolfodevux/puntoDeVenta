@@ -25,16 +25,16 @@ $oldEmail = $authController->getOldData('email');
         <div class="container">
             <div class="login-card">
                 <div class="header">
-                    <div class="logo-container">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIwIDQwQzMxLjA0NTcgNDAgNDAgMzEuMDQ1NyA0MCAyMEM0MCA4Ljk1NDMgMzEuMDQ1NyAwIDIwIDBDOC45NTQzIDAgMCA4Ljk1NDMgMCAyMEMwIDMxLjA0NTcgOC45NTQzIDQwIDIwIDQwWiIgZmlsbD0iIzAwMDAwMCIvPgo8cGF0aCBkPSJNMjAgMzZDMjguODM2NiAzNiAzNiAyOC44MzY2IDM2IDIwQzM2IDExLjE2MzQgMjguODM2NiA0IDIwIDRDMTEuMTYzNCA0IDQgMTEuMTYzNCA0IDIwQzQgMjguODM2NiAxMS4xNjM0IDM2IDIwIDM2WiIgZmlsbD0iI0ZGRkZGRiIvPgo8ZWxsaXBzZSBjeD0iMTUiIGN5PSIxNS41IiByeD0iMyIgcnk9IjQiIGZpbGw9IiMwMDAwMDAiLz4KPGVsbGlwc2UgY3g9IjI1IiBjeT0iMTUuNSIgcng9IjMiIHJ5PSI0IiBmaWxsPSIjMDAwMDAwIi8+CjxwYXRoIGQ9Ik0xMiAyNEMxNCAxOCAyNiAxOCAyOCAyNEMyNiAyOCAxNCAyOCAxMiAyNCIgZmlsbD0iI0ZGQjAwMCIvPgo8cGF0aCBkPSJNOCAzMkM0IDI4IDggMjQgMTYgMjZDMTQgMzAgMTAgMzIgOCAzMloiIGZpbGw9IiNGRkIwMDAiLz4KPHBhdGggZD0iTTMyIDMyQzM2IDI4IDMyIDI0IDI0IDI2QzI2IDMwIDMwIDMyIDMyIDMyWiIgZmlsbD0iI0ZGQjAwMCIvPgo8L3N2Zz4K" alt="Tux Logo" class="tux-logo-img">
+                    <div class="profile-pic">
+                       
                     </div>
                     <h1>Punto-D</h1>
                     <p>Crear Nueva Cuenta</p>
                 </div>
                 
-                <div class="profile-pic">
-                    <div class="avatar-circle">
-                        <i class="fas fa-user-plus"></i>
+                <div class="logo-container">
+                     <div class="logo-container">
+                         <img src="../../Assets/img/tux.png" alt="Tux Logo" class="tux-logo-img">
                     </div>
                 </div>
                 

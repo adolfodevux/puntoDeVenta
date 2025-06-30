@@ -10,13 +10,8 @@ define('DB_USER', 'debian');     // Usuario de la base de datos
 define('DB_PASS', 'P@ss_d3bian-linux_Vps');         // Contraseña del usuario de la base de datos
 define('DB_PORT', 3306);       // Puerto de MySQL (el predeterminado es 3306)
 define('DB_CHARSET', 'utf8mb4'); // Conjunto de caracteres (importante para emojis, etc.)
-
-// Opcional: Definir otras configuraciones generales de la aplicación
 define('APP_NAME', 'Sistema Punto de Venta');
 define('APP_URL', 'http://localhost/puntoDeVenta/public/'); // URL base de tu aplicación
 define('DEBUG_MODE', true); // Cambiar a false en producción para ocultar errores detallados
-
-// Otras configuraciones, por ejemplo, para la gestión de sesiones
-// session_start(); // Puedes iniciar la sesión aquí si no lo haces en otro punto central
 
 ?>
