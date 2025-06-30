@@ -1,14 +1,18 @@
 <?php
 // Controlador para manejo de ventas
 require_once '../Models/database.php';
+require_once '../Models/Sales.php';
 
 header('Content-Type: application/json');
 
 class SalesController {
     private $db;
+    private $salesModel;
     
     public function __construct() {
         $this->db = Database::getInstance();
+        $database = new Database();
+        $this->salesModel = new Sales($database->getConnection());
     }
     
     public function processSale() {
@@ -174,6 +178,33 @@ class SalesController {
                 'success' => false,
                 'message' => 'Error al obtener detalles de venta: ' . $e->getMessage()
             ]);
+        }
+    }
+    
+    public function index() {
+        $sales = $this->salesModel->getAllSales();
+        if (empty($sales)) {
+            include '../Views/dashboard/no_sales.php';
+        } else {
+            include '../Views/dashboard/sales.php';
+        }
+    }
+
+    public function create($data) {
+        $result = $this->salesModel->addSale($data);
+        if ($result) {
+            header('Location: /dashboard/sales');
+        } else {
+            echo "Error creating sale.";
+        }
+    }
+
+    public function delete($id) {
+        $result = $this->salesModel->deleteSale($id);
+        if ($result) {
+            header('Location: /dashboard/sales');
+        } else {
+            echo "Error deleting sale.";
         }
     }
 }
