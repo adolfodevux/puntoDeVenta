@@ -947,23 +947,15 @@ $currentTime = date('H:i:s');
                             ${getProductIcon(product.category_name)}
                         </div>
                         <div class="product-info">
+                            <h4>${product.name}</h4>
                             <div class="product-info-row">
-                                <h4>${product.name}</h4>
                                 <span class="price">$${parseFloat(product.price).toFixed(2)}</span>
-                                ${isMobile ? '' : stockBadge}
+                                ${stockBadge}
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
-            // Si es móvil, mostrar el stock como tooltip y ocultar badge visualmente
-            if (isMobile) {
-                const cards = grid.querySelectorAll('.product-card');
-                cards.forEach(card => {
-                    const stock = card.getAttribute('data-stock');
-                    card.title = `Stock: ${stock}`;
-                });
-            }
             // Agregar event listeners a las tarjetas
             const productCards = grid.querySelectorAll('.product-card');
             productCards.forEach(card => {

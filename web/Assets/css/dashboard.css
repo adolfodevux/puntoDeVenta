@@ -1690,6 +1690,37 @@ body {
     }
 }
 
+/* Product info row layout */
+.product-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.product-info-row .price {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.product-info-row .stock-badge {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* En pantallas más pequeñas, mantener el layout horizontal pero con menor gap */
+@media (max-width: 768px) {
+    .product-info-row {
+        gap: 0.3rem;
+    }
+    
+    .product-info-row .stock-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.3rem;
+    }
+}
+
 /* ========== ESTILOS PARA NOTIFICACIONES TOAST ========== */
 .toast-notification {
     position: fixed;
