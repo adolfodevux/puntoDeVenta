@@ -99,6 +99,13 @@ CREATE TABLE IF NOT EXISTS customers (
     INDEX idx_document (document_number)
 );
 
+-- Tabla de clientes
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL
+);
+
 -- Insertar categorías de ejemplo
 INSERT INTO categories (name, description) VALUES 
 ('Bebidas', 'Bebidas refrescantes y gaseosas'),
@@ -139,6 +146,7 @@ DESCRIBE products;
 DESCRIBE sales;
 DESCRIBE sale_items;
 DESCRIBE customers;
+DESCRIBE clientes;
 
 -- Mostrar datos de ejemplo
 SELECT 'USUARIOS:' as 'TABLA';

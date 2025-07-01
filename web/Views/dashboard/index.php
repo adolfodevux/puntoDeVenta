@@ -13,6 +13,9 @@ $username = $_SESSION['username'] ?? 'Usuario';
 $email = $_SESSION['email'] ?? '';
 $userId = $_SESSION['user_id'] ?? '';
 
+// Obtener clientes registrados en sesión para el selector del POS
+$clientes_pos = isset($_SESSION['clientes']) ? $_SESSION['clientes'] : [];
+
 // Obtener fecha y hora actual
 $currentDate = date('d/m/Y');
 $currentTime = date('H:i:s');
@@ -205,6 +208,15 @@ $currentTime = date('H:i:s');
                     
                     <div class="cart-summary">
                         <div class="summary-row">
+                            <label for="clienteSelect" style="font-weight:600;">Cliente:</label>
+                            <select id="clienteSelect" style="width:100%;padding:7px 10px;border-radius:6px;border:1.5px solid #b2c9e6;margin-bottom:10px;">
+                                <option value="">Selecciona un cliente</option>
+                                <?php foreach ($clientes_pos as $idx => $cliente): ?>
+                                    <option value="<?= $idx ?>">#<?= $idx+1 ?> - <?= htmlspecialchars($cliente['nombre']) ?> (<?= htmlspecialchars($cliente['telefono']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="summary-row">
                             <span>Subtotal:</span>
                             <span id="subtotal">$0.00</span>
                         </div>
@@ -259,6 +271,7 @@ $currentTime = date('H:i:s');
         let products = [];
         let categories = [];
         let cartExpanded = false; // Estado del carrito expandido
+        let selectedCliente = '';
         
         // Variables de paginación
         let currentPage = 1;
@@ -1179,7 +1192,7 @@ $currentTime = date('H:i:s');
             }
         }
 
-        // Renderizar carrito
+       
         function renderCart() {
             const cartItemsContainer = document.getElementById('cartItems');
             cartItemsContainer.innerHTML = '';
@@ -1354,132 +1367,49 @@ $currentTime = date('H:i:s');
         function processCheckout() {
             console.log('processCheckout() iniciada');
             
+            if (!selectedCliente) {
+                showErrorToast('Selecciona un cliente antes de procesar la venta');
+                return;
+            }
+            
             if (cart.length === 0) {
-                showErrorToast('❌ El carrito está vacío');
+                showErrorToast('El carrito está vacío');
                 return;
             }
             
-            const totalEl = document.getElementById('total');
-            const amountPaidEl = document.getElementById('amountPaid');
-            const changeEl = document.getElementById('change');
-            
-            if (!totalEl || !amountPaidEl || !changeEl) {
-                showErrorToast('❌ Error en los elementos de pago');
-                return;
-            }
-            
-            const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
-            const amountPaid = parseFloat(amountPaidEl.value || 0);
-            const change = parseFloat(changeEl.textContent || 0);
-            
+            const total = calculateSubtotal();
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
             if (amountPaid < total) {
-                showErrorToast('❌ El monto recibido es insuficiente');
+                showErrorToast('El monto recibido es insuficiente');
                 return;
             }
             
-            // Mostrar confirmación de venta
-            showConfirmation(
-                '¿Procesar Venta?',
-                `Total: $${total.toFixed(2)}\nRecibido: $${amountPaid.toFixed(2)}\nCambio: $${change.toFixed(2)}\n\n¿Confirmar la venta?`,
-                function() {
-                    // Procesar la venta
-                    processSale(total, amountPaid, change);
-                }
-            );
-        }
-        
-        // Función para procesar la venta efectivamente
-        async function processSale(total, amountPaid, change) {
-            console.log('processSale() iniciada');
+            // Guardar compra en la sesión del cliente
+            const compra = {
+                productos: cart.map(item => ({
+                    nombre: item.name,
+                    cantidad: item.quantity,
+                    precio: item.price
+                })),
+                total: total,
+                fecha: new Date().toLocaleString('es-ES')
+            };
             
-            try {
-                // Mostrar loading
-                Swal.fire({
-                    title: 'Procesando venta...',
-                    text: 'Por favor espera',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Preparar datos de la venta
-                const saleData = {
-                    items: cart.map(item => ({
-                        product_id: item.id,
-                        quantity: item.quantity,
-                        price: item.price,
-                        subtotal: item.price * item.quantity
-                    })),
-                    payment_method: selectedPaymentMethod,
-                    subtotal: total / 1.16, // Sin IVA
-                    tax: total * 0.16 / 1.16, // IVA
-                    total: total,
-                    amount_paid: amountPaid,
-                    change: change
-                };
-                
-                console.log('Datos de venta:', saleData);
-                
-                // Aquí normalmente enviarías los datos al servidor
-                // const response = await fetch('../../Controllers/SalesController.php', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(saleData)
-                // });
-                
-                // Simular procesamiento exitoso por ahora
-                setTimeout(() => {
-                    // Limpiar carrito y resetear formulario
-                    cart = [];
+            // Enviar por fetch a un endpoint PHP para guardar en $_SESSION['compras_clientes']
+            fetch('guardar_compra.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clienteId: selectedCliente, compra })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    showSuccessToast('Venta registrada correctamente');
+                    clearCart();
                     document.getElementById('amountPaid').value = '';
                     document.getElementById('change').textContent = '0.00';
-                    
-                    renderCart();
-                    calculateSubtotal();
-                    updateCheckoutBtn();
-                    
-                    // Contraer carrito automáticamente en móvil después de la compra
-                    if (window.innerWidth <= 768 && cartExpanded) {
-                        toggleCartExpansion();
-                    }
-                    
-                    // Mostrar éxito
-                    Swal.fire({
-                        title: '¡Venta Procesada!',
-                        html: `
-                            <div style="text-align: center; padding: 1rem;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-                                <p><strong>Total:</strong> $${total.toFixed(2)}</p>
-                                <p><strong>Recibido:</strong> $${amountPaid.toFixed(2)}</p>
-                                <p><strong>Cambio:</strong> $${change.toFixed(2)}</p>
-                                <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                                    <p style="margin: 0; color: #28a745; font-weight: 600;">✔️ Venta registrada exitosamente</p>
-                                </div>
-                            </div>
-                        `,
-                        icon: 'success',
-                        confirmButtonText: '🎯 Nueva Venta',
-                        confirmButtonColor: '#28a745',
-                        timer: 10000,
-                        timerProgressBar: true
-                    }).then(() => {
-                        showSuccessToast('🎉 ¡Listo para la siguiente venta!');
-                    });
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error al procesar venta:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudo procesar la venta: ' + error.message,
-                    icon: 'error',
-                    confirmButtonText: 'Reintentar',
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
+                } else {
+                    showErrorToast('No se pudo registrar la venta');
+                }
+            });
         }
         
         // Función para cambiar entre módulos del sistema
@@ -1492,10 +1422,14 @@ $currentTime = date('H:i:s');
                 'products': '📦 Módulo Productos - Próximamente disponible',
                 'inventory': '📊 Módulo Inventario - En desarrollo',
                 'sales': '📈 Módulo Ventas - Funcionalidad futura',
-                'customers': '👥 Módulo Clientes - En construcción',
                 'reports': '📋 Módulo Reportes - Próximamente',
                 'settings': '⚙️ Módulo Configuración - En desarrollo'
             };
+            
+            if (module === 'customers') {
+                window.location.href = '../../Views/clientes/index.php';
+                return;
+            }
             
             const message = moduleMessages[module] || '🔧 Módulo no disponible';
             
