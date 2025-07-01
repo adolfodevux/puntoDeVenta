@@ -41,18 +41,18 @@ while ($row = $resCat->fetch_assoc()) {
             text-shadow: 0 2px 8px #b2c9e6;
             margin: 0;
         }
-        .btn-add { background: #43cea2; color: #fff; border: none; border-radius: 50px; padding: 0.8rem 2.2rem; font-size: 1.2rem; font-weight: 700; box-shadow: 0 4px 16px #43cea233; transition: all 0.18s; }
+        .btn-add { background: #43cea2; color: #fff; border: none; border-radius: 0.3rem; padding: 0.8rem 2.2rem; font-size: 1.2rem; font-weight: 700; box-shadow: 0 4px 16px #43cea233; transition: all 0.18s; }
         .btn-add:hover { background: #185a9d; transform: scale(1.06); }
         /* Tabla de inventario */
         .table-responsive { width: 100%; overflow-x: auto; }
-        .table-inventario { width: 100%; border-collapse: collapse; background: #fff; border-radius: 1.2rem; box-shadow: 0 4px 16px #b2c9e622; font-size: 1.08rem; min-width: 700px; }
+        .table-inventario { width: 100%; border-collapse: collapse; background: #fff; border-radius: 0; box-shadow: 0 4px 16px #b2c9e622; font-size: 1.08rem; min-width: 700px; }
         .table-inventario th, .table-inventario td { padding: 1em 0.7em; text-align: left; border-bottom: 1px solid #e0eafc; }
-        .table-inventario th { background: #185a9d; color: #fff; font-weight: 800; border-top-left-radius: 1.2rem; border-top-right-radius: 1.2rem; }
+        .table-inventario th { background: #185a9d; color: #fff; font-weight: 800; border-top-left-radius: 0; border-top-right-radius: 0; }
         .table-inventario tr:last-child td { border-bottom: none; }
         .table-inventario td { color: #1a2947; }
-        .table-inventario td .badge-stock { background: #43cea2; color: #fff; border-radius: 1em; padding: 0.3em 1.1em; font-weight: 700; font-size: 1em; display: inline-flex; align-items: center; gap: 0.4em; }
-        .table-inventario td .badge-price { background: #fffbe6; color: #b7950b; border-radius: 1em; padding: 0.3em 1.1em; font-weight: 700; font-size: 1em; display: inline-flex; align-items: center; gap: 0.4em; }
-        .table-inventario td .btn-edit, .table-inventario td .btn-delete { border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; border: none; cursor: pointer; margin-right: 0.3em; }
+        .table-inventario td .badge-stock { background: #43cea2; color: #fff; border-radius: 0.2rem; padding: 0.3em 1.1em; font-weight: 700; font-size: 1em; display: inline-flex; align-items: center; gap: 0.4em; }
+        .table-inventario td .badge-price { background: #fffbe6; color: #b7950b; border-radius: 0.2rem; padding: 0.3em 1.1em; font-weight: 700; font-size: 1em; display: inline-flex; align-items: center; gap: 0.4em; }
+        .table-inventario td .btn-edit, .table-inventario td .btn-delete { border-radius: 0.2rem; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; border: none; cursor: pointer; margin-right: 0.3em; }
         .table-inventario td .btn-edit { background: #f1c40f; color: #7d6608; }
         .table-inventario td .btn-edit:hover { background: #f9e79f; }
         .table-inventario td .btn-delete { background: #e74c3c; color: #fff; }
@@ -99,7 +99,7 @@ while ($row = $resCat->fetch_assoc()) {
             .btn-add { 
                 padding: 0.4rem 1rem; 
                 font-size: 0.8rem;
-                border-radius: 30px;
+                border-radius: 0.2rem;
             }
             .badge-stock, .badge-price { 
                 font-size: 0.7rem;
@@ -223,7 +223,7 @@ while ($row = $resCat->fetch_assoc()) {
         }
         #paginationNav button {
             border: none;
-            border-radius: 50%;
+            border-radius: 0.2rem;
             width: 2.2em;
             height: 2.2em;
             font-weight: 700;
@@ -244,7 +244,7 @@ while ($row = $resCat->fetch_assoc()) {
             transform: scale(1.12);
         }
         #paginationNav .nav-arrow {
-            border-radius: 50%;
+            border-radius: 0.2rem;
             width: 2.5em;
             height: 2.5em;
             background: none;
