@@ -93,7 +93,11 @@ body {
     z-index: 1000;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
-    /* overflow-y: auto;  Eliminado para mostrar el menú completo */
+    overflow-y: auto; /* Restaurado para permitir scroll en mobile */
+    overflow-x: hidden; /* Ocultar scroll horizontal */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling en iOS */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox */
 }
 
 .sidebar-header {
@@ -139,8 +143,8 @@ body {
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
-    overflow-y: visible; /* Mostrar todo el menú sin scroll */
-    max-height: none; /* Sin límite de altura */
+    overflow-y: auto;
+    min-height: 0; /* Importante para flex scroll */
 }
 
 .sidebar-nav ul {
@@ -1026,6 +1030,97 @@ body {
     pointer-events: none;
     filter: blur(2px) grayscale(0.2) brightness(0.95);
     opacity: 0.5;
+}
+
+/* Mejorar scroll del sidebar en móvil */
+.sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling en iOS */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox */
+}
+
+/* Webkit scrollbar styling para móvil */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Asegurar que el sidebar navigation pueda hacer scroll */
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Importante para flex scroll */
+}
+
+/* Mejorar el área de navegación en modo horizontal móvil */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        height: 100vh;
+        max-height: 100vh;
+    }
+    
+    .sidebar-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-header h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .user-info {
+        padding: 0.3rem;
+        gap: 0.5rem;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .username {
+        font-size: 0.8rem;
+    }
+    
+    .sidebar-nav {
+        padding: 0.5rem 0;
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .nav-item a {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-item a i {
+        width: 18px;
+        margin-right: 0.7rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Asegurar que logout esté siempre accesible */
+    .logout-nav-item {
+        margin-top: auto;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 0.5rem;
+    }
 }
 
 /* Enhanced Mobile Responsive Design */
