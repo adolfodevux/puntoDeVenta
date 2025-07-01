@@ -73,8 +73,25 @@ while ($row = $resCat->fetch_assoc()) {
             .table-inventario th, .table-inventario td { padding: 0.4em 0.1em; }
         }
         /* Paginación moderna */
+        #paginationNav {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2rem;
+        }
         #paginationNav button {
-            transition: background 0.18s, color 0.18s, transform 0.18s;
+            border: none;
+            border-radius: 50%;
+            width: 2.2em;
+            height: 2.2em;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #paginationNav button:disabled {
             opacity: 0.4;
@@ -84,6 +101,61 @@ while ($row = $resCat->fetch_assoc()) {
             background: #43cea2 !important;
             color: #fff !important;
             transform: scale(1.12);
+        }
+        #paginationNav .nav-arrow {
+            border-radius: 50%;
+            width: 2.5em;
+            height: 2.5em;
+            background: none;
+            font-size: 1.5rem;
+        }
+        
+        /* Estilos para SweetAlert2 - Notificaciones */
+        .swal2-popup {
+            border-radius: 2rem !important;
+            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15) !important;
+        }
+        .swal2-title {
+            color: #1a2947 !important;
+            font-weight: 800 !important;
+            font-size: 1.8rem !important;
+        }
+        .swal2-content {
+            color: #1a2947 !important;
+            font-size: 1.1rem !important;
+        }
+        .swal2-confirm {
+            background: #43cea2 !important;
+            border-radius: 2rem !important;
+            padding: 0.8rem 2rem !important;
+            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+            box-shadow: 0 4px 16px rgba(67, 206, 162, 0.3) !important;
+        }
+        .swal2-cancel {
+            background: #6c757d !important;
+            border-radius: 2rem !important;
+            padding: 0.8rem 2rem !important;
+            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+        }
+        .swal2-confirm:hover {
+            background: #185a9d !important;
+            transform: scale(1.05) !important;
+        }
+        .swal2-icon.swal2-success {
+            border-color: #43cea2 !important;
+            color: #43cea2 !important;
+        }
+        .swal2-icon.swal2-error {
+            border-color: #e74c3c !important;
+            color: #e74c3c !important;
+        }
+        .swal2-icon.swal2-warning {
+            border-color: #f39c12 !important;
+            color: #f39c12 !important;
         }
         /* Modal glassmorphism */
         .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,60,90,0.18); align-items: center; justify-content: center; z-index: 9999; }
@@ -108,6 +180,7 @@ while ($row = $resCat->fetch_assoc()) {
                 <span style="position:absolute;right:0.8em;top:50%;transform:translateY(-50%);color:#43cea2;font-size:1.2em;"><i class="fa fa-search"></i></span>
             </div>
             <button class="btn-add" onclick="openAddModal()"><i class="fa fa-plus"></i> Agregar Producto</button>
+            <button class="btn-add" onclick="window.location.href='../index.php'"><i class="fa fa-arrow-left"></i> Regresar</button>
         </div>
     </div>
     <div class="table-responsive" style="margin-top:2rem;">
@@ -128,9 +201,7 @@ while ($row = $resCat->fetch_assoc()) {
             </tbody>
         </table>
     </div>
-    <div style="display:flex;justify-content:center;margin-top:2rem;">
-        <nav id="paginationNav" style="display:flex;gap:0.5rem;"></nav>
-    </div>
+    <nav id="paginationNav"></nav>
 </div>
 <!-- Modal para agregar/editar -->
 <div class="modal-bg" id="modalBg">
@@ -217,11 +288,19 @@ function renderPagination(totalPages, dataOverride) {
     const nav = document.getElementById('paginationNav');
     if (totalPages <= 1) { nav.innerHTML = ''; return; }
     let html = '';
-    html += `<button onclick='goToPage(${Math.max(1, currentPage-1)}, ${!!dataOverride})' ${currentPage===1?'disabled':''} style='border:none;background:none;font-size:1.5rem;cursor:pointer;'>&#8593;</button>`;
+    
+    // Botón anterior
+    html += `<button class='nav-arrow' onclick='goToPage(${Math.max(1, currentPage-1)}, ${!!dataOverride})' ${currentPage===1?'disabled':''}><i class='fa fa-chevron-left'></i></button>`;
+    
+    // Botones de páginas
     for(let i=1;i<=totalPages;i++) {
-        html += `<button onclick='goToPage(${i}, ${!!dataOverride})' style='border-radius:50%;width:2.2em;height:2.2em;font-weight:700;border:none;background:${i===currentPage?'#185a9d':'#e0eafc'};color:${i===currentPage?'#fff':'#185a9d'};margin:0 0.1em;cursor:pointer;'>${i}</button>`;
+        const isActive = i===currentPage;
+        html += `<button onclick='goToPage(${i}, ${!!dataOverride})' style='background:${isActive?'#185a9d':'#e0eafc'};color:${isActive?'#fff':'#185a9d'};'>${i}</button>`;
     }
-    html += `<button onclick='goToPage(${Math.min(totalPages, currentPage+1)}, ${!!dataOverride})' ${currentPage===totalPages?'disabled':''} style='border:none;background:none;font-size:1.5rem;cursor:pointer;'>&#8595;</button>`;
+    
+    // Botón siguiente  
+    html += `<button class='nav-arrow' onclick='goToPage(${Math.min(totalPages, currentPage+1)}, ${!!dataOverride})' ${currentPage===totalPages?'disabled':''}><i class='fa fa-chevron-right'></i></button>`;
+    
     nav.innerHTML = html;
 }
 function goToPage(page, filtered) {

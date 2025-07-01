@@ -81,18 +81,7 @@ $currentTime = date('H:i:s');
                             <span>Clientes</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="#" data-module="reports">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Reportes</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-module="settings" id="settingsBtn">
-                            <i class="fas fa-cog"></i>
-                            <span>Configuración</span>
-                        </a>
-                    </li>
+                    
                     <li class="nav-item logout-nav-item">
                         <a href="../auth/logout.php" class="logout-btn quick-logout">
                             <i class="fas fa-sign-out-alt"></i>
