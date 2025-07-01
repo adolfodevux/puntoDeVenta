@@ -1296,18 +1296,34 @@ body {
         margin: 0 0.3rem; /* Separación horizontal */
     }
     
+    .qty-btn {
+        min-width: 50px;
+        min-height: 50px;
+        font-size: 1.3rem;
+        border-radius: 12px;
+        font-weight: bold;
+        border: 2px solid #3498db;
+        background: white;
+        color: #3498db;
+        transition: all 0.2s ease;
+    }
+    
+    .qty-btn:hover {
+        background: #3498db;
+        color: white;
+        transform: scale(1.05);
+    }
+    
     .qty-btn.remove-btn {
+        min-width: 50px;
+        min-height: 50px;
         background: #e74c3c;
         color: white;
-        border-color: #e74c3c;
-        min-width: 44px;
-        min-height: 44px;
-        border-radius: 8px;
+        border: none;
     }
     
     .qty-btn.remove-btn:hover {
         background: #c0392b;
-        border-color: #c0392b;
     }
     
     .cart-summary {
@@ -1674,497 +1690,134 @@ body {
     }
 }
 
-/* ============================================
-   ESTILOS PARA BIENVENIDA MEJORADA
-   ============================================ */
-
-/* Animaciones para la bienvenida */
-@keyframes welcomePulse {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.8; }
-}
-
-@keyframes welcomeSlideIn {
-    0% { 
-        transform: translateY(-30px) scale(0.9); 
-        opacity: 0; 
-    }
-    100% { 
-        transform: translateY(0) scale(1); 
-        opacity: 1; 
-    }
-}
-
-@keyframes welcomeShine {
-    0% { box-shadow: 0 0 5px rgba(255,255,255,0.3); }
-    50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); }
-    100% { box-shadow: 0 0 5px rgba(255,255,255,0.3); }
-}
-
-/* Contenedor personalizado de SweetAlert para bienvenida */
-.swal-welcome-container {
-    backdrop-filter: blur(8px);
-}
-
-.swal-welcome-popup {
-    animation: welcomeSlideIn 0.6s ease-out !important;
-    border-radius: 25px !important;
-    overflow: hidden;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.3) !important;
-}
-
-.swal-welcome-button {
-    font-weight: 600 !important;
-    padding: 12px 30px !important;
-    border-radius: 25px !important;
-    font-size: 1rem !important;
-    text-transform: none !important;
-    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3) !important;
-    transition: all 0.3s ease !important;
-}
-
-.swal-welcome-button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4) !important;
-}
-
-/* Efectos adicionales para elementos de bienvenida */
-.welcome-icon-container {
-    animation: welcomePulse 3s infinite ease-in-out;
-}
-
-.welcome-info-card {
-    animation: welcomeShine 4s infinite ease-in-out;
-    transition: all 0.3s ease;
-}
-
-.welcome-info-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-
-.welcome-tip-box {
-    position: relative;
-    overflow: hidden;
-}
-
-.welcome-tip-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: welcomeShimmer 3s infinite;
-}
-
-@keyframes welcomeShimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-.welcome-badge {
-    transition: all 0.3s ease;
-    cursor: default;
-}
-
-.welcome-badge:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Responsive para la bienvenida */
-@media (max-width: 768px) {
-    .swal-welcome-popup {
-        width: 90% !important;
-        margin: 0 5% !important;
-    }
-    
-    .welcome-info-grid {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-    }
-    
-    .welcome-badges {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-    }
-}
-
-/* Mejoras adicionales para el tema nocturno */
-.welcome-night-theme {
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
-    color: #ecf0f1 !important;
-}
-
-.welcome-day-theme {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: #ffffff !important;
-}
-
-.welcome-afternoon-theme {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
-    color: #ffffff !important;
-}
-
-.welcome-evening-theme {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
-    color: #2c3e50 !important;
-}
-
-/* Estilos para el paginador - Moderno y limpio */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    margin: 3rem 0 2rem 0;
-    padding: 20px 0;
-    background: transparent;
-    flex-wrap: wrap;
-}
-
-.page-number, .pagination-btn {
-    padding: 14px 18px;
-    border: 2px solid transparent;
-    background: #ffffff;
-    color: #475569;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 600;
-    min-width: 52px;
-    text-align: center;
-    font-size: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #e2e8f0;
-}
-
-.page-number:hover, .pagination-btn:hover {
-    background: #3b82f6;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
-    border-color: #3b82f6;
-}
-
-.page-number.active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
-    border-color: #10b981;
-    transform: translateY(-1px);
-}
-
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
-    background: #f8fafc;
-    color: #cbd5e0;
-    border-color: #f1f5f9;
-}
-
-.pagination-btn:disabled:hover {
-    background: #f8fafc !important;
-    color: #cbd5e0 !important;
-    transform: none !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-    border-color: #f1f5f9 !important;
-}
-
-.pagination-info {
-    margin: 0 24px;
-    color: #374151;
-    font-size: 15px;
-    font-weight: 600;
-    padding: 14px 18px;
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-    border-radius: 12px;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* Controles del paginador en línea horizontal */
-.pagination-controls {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: nowrap;
-    width: 100%;
-}
-
-.page-numbers {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: nowrap;
-}
-
-/* Asegurar que los botones de paginación se mantengan en línea */
-.pagination-btn {
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.page-number {
-    flex-shrink: 0;
-}
-
-/* Notificaciones toast modernas */
-.toast-notification {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    z-index: 9999;
-    max-width: 380px;
-    min-width: 320px;
-    padding: 16px 20px;
-    border-radius: 16px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 
-                0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateX(420px);
-    opacity: 0;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.toast-notification.show {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-.toast-notification.success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-left: 4px solid #34d399;
-}
-
-.toast-notification.error {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    border-left: 4px solid #f87171;
-}
-
-.toast-notification.warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border-left: 4px solid #fbbf24;
-}
-
-.toast-notification.info {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-left: 4px solid #60a5fa;
-}
-
-.toast-notification::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.8);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.8; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
-}
-
-.toast-close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.8rem;
-    background: none;
+/* --- Estilos modernos para inventario --- */
+.inventario-table th, .inventario-table td {
     border: none;
-    color: white;
-    font-size: 1.2rem;
+    padding: 1rem 0.7rem;
+    font-size: 1.08rem;
+}
+.inventario-table th {
+    background: linear-gradient(90deg, #3498db 0%, #6dd5fa 100%);
+    color: #fff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.inventario-table tr {
+    background: #f8fafd;
+    transition: background 0.2s;
+}
+.inventario-table tr:hover {
+    background: #e3f2fd;
+}
+.badge-stock {
+    background: #eafaf1;
+    color: #27ae60;
+    border-radius: 12px;
+    padding: 0.3em 0.8em;
+    font-weight: 600;
+    font-size: 1em;
+    box-shadow: 0 1px 4px #27ae601a;
+}
+.badge-price {
+    background: #f0f6ff;
+    color: #2980b9;
+    border-radius: 12px;
+    padding: 0.3em 0.8em;
+    font-weight: 600;
+    font-size: 1em;
+    box-shadow: 0 1px 4px #2980b91a;
+}
+.acciones .btn {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    margin: 0 2px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.acciones .btn-edit {
+    background: linear-gradient(135deg, #ffe259 0%, #ffa751 100%);
+    color: #2c3e50;
+}
+.acciones .btn-edit:hover {
+    background: linear-gradient(135deg, #ffd200 0%, #ffa751 100%);
+    color: #222;
+    transform: scale(1.08);
+}
+.acciones .btn-delete {
+    background: linear-gradient(135deg, #ff5858 0%, #f09819 100%);
+    color: #fff;
+}
+.acciones .btn-delete:hover {
+    background: linear-gradient(135deg, #ff0000 0%, #f09819 100%);
+    color: #fff;
+    transform: scale(1.08);
+}
+.modal {
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(44,62,80,0.18);
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 420px;
+}
+.modal h3 {
+    color: #3498db;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0.3em;
+    display: block;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.7em 1em;
+    border-radius: 8px;
+    border: 1px solid #dbeafe;
+    font-size: 1.05em;
+    margin-bottom: 1.1em;
+    background: #f8fafc;
+    transition: border 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+    border: 1.5px solid #3498db;
+    outline: none;
+}
+.btn.btn-add {
+    background: linear-gradient(90deg, #3498db 0%, #6dd5fa 100%);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px #3498db33;
+    transition: background 0.2s, transform 0.15s;
+}
+.btn.btn-add:hover {
+    background: linear-gradient(90deg, #217dbb 0%, #6dd5fa 100%);
+    transform: scale(1.04);
+}
+.close-modal {
+    font-size: 1.5rem;
+    color: #e74c3c;
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
+    position: absolute;
+    top: 1.2rem;
+    right: 1.5rem;
+    z-index: 10;
+    transition: color 0.2s;
 }
-
-.toast-close:hover {
-    opacity: 1;
+.close-modal:hover {
+    color: #c0392b;
 }
-
-/* Animaciones para notificaciones */
-@keyframes toastSlideIn {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+@media (max-width: 700px) {
+    .modal { padding: 1.2rem 0.5rem; max-width: 98vw; }
+    .inventario-header { flex-direction: column; gap: 1rem; }
+    .inventario-header h2 { font-size: 1.3rem; }
+    .inventario-table th, .inventario-table td { padding: 0.5rem; font-size: 0.95rem; }
 }
-
-@keyframes toastSlideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-}
-
-/* Responsive para paginador y notificaciones */
-@media (max-width: 768px) {
-    .pagination-container {
-        gap: 12px;
-        margin: 2rem 0 1.5rem 0;
-        flex-wrap: wrap;
-        padding: 16px 0;
-    }
-    
-    .page-number, .pagination-btn {
-        padding: 12px 14px;
-        min-width: 44px;
-        font-size: 14px;
-        border-radius: 10px;
-    }
-    
-    .pagination-info {
-        font-size: 14px;
-        margin: 0 16px;
-        padding: 12px 16px;
-        order: -1;
-        flex-basis: 100%;
-        text-align: center;
-        margin-bottom: 12px;
-    }
-    
-    .toast-notification {
-        top: 16px;
-        right: 16px;
-        left: 16px;
-        max-width: none;
-        min-width: auto;
-        padding: 14px 16px;
-        transform: translateY(-100px);
-        font-size: 13px;
-    }
-    
-    .toast-notification.show {
-        transform: translateY(0);
-    }
-}
-
-/* Media query adicional para pantallas muy pequeñas */
-@media (max-width: 480px) {
-    .pagination-container {
-        gap: 8px;
-        margin: 1.5rem 0 1rem 0;
-        padding: 12px 0;
-    }
-    
-    .page-number, .pagination-btn {
-        padding: 10px 12px;
-        min-width: 40px;
-        font-size: 13px;
-        border-radius: 8px;
-    }
-    
-    .pagination-info {
-        font-size: 13px;
-        margin: 0 8px;
-        padding: 10px 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .toast-notification {
-        max-width: calc(100vw - 20px);
-        min-width: auto;
-        right: 10px;
-        left: 10px;
-    }
-}
-
-/* Estilos adicionales para el logout modal */
-.btn-logout-confirm {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3) !important;
-}
-
-.btn-logout-cancel {
-    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%) !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3) !important;
-}
-
-/* Scroll horizontal suave en el paginador si es necesario (solo si hay muchos elementos) */
-.pagination-container::-webkit-scrollbar {
-    height: 4px;
-}
-
-.pagination-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.pagination-container::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 2px;
-}
-
-.pagination-container::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-
-/* Estilos para el modal de bienvenida mejorado */
-.welcome-popup {
-    border-radius: 20px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-    border: none !important;
-    overflow: hidden !important;
-}
-
-.welcome-title {
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.welcome-confirm-btn {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
-    border: none !important;
-    border-radius: 25px !important;
-    padding: 12px 30px !important;
-    font-weight: 600 !important;
-    font-size: 1rem !important;
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3) !important;
-    transition: all 0.3s ease !important;
-}
-
-.welcome-confirm-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4) !important;
-}
-
-/* Animación del icono principal del modal */
-@keyframes bounceIcon {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-10px); }
-    60% { transform: translateY(-5px); }
-}
-
-.welcome-popup .swal2-html-container div:first-child {
-    animation: bounceIcon 2s ease-in-out !important;
-}
+/* --- Fin estilos modernos inventario --- */

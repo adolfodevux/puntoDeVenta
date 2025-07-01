@@ -177,6 +177,46 @@ class ProductsController {
             ]);
         }
     }
+    
+    // AGREGAR PRODUCTO
+    public function addProduct($name, $category_id, $description, $barcode, $stock, $price) {
+        try {
+            $conn = $this->db->getConnection();
+            $stmt = $conn->prepare("INSERT INTO products (name, category_id, description, barcode, stock, price, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
+            $stmt->bind_param('sissid', $name, $category_id, $description, $barcode, $stock, $price);
+            $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => true, 'message' => 'Producto agregado']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al agregar: ' . $e->getMessage()]);
+        }
+    }
+    // EDITAR PRODUCTO
+    public function editProduct($id, $name, $category_id, $description, $barcode, $stock, $price) {
+        try {
+            $conn = $this->db->getConnection();
+            $stmt = $conn->prepare("UPDATE products SET name=?, category_id=?, description=?, barcode=?, stock=?, price=? WHERE id=?");
+            $stmt->bind_param('sissidi', $name, $category_id, $description, $barcode, $stock, $price, $id);
+            $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => true, 'message' => 'Producto actualizado']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al editar: ' . $e->getMessage()]);
+        }
+    }
+    // ELIMINAR PRODUCTO
+    public function deleteProduct($id) {
+        try {
+            $conn = $this->db->getConnection();
+            $stmt = $conn->prepare("UPDATE products SET is_active=0 WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => true, 'message' => 'Producto eliminado']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()]);
+        }
+    }
 }
 
 // Manejo de rutas
@@ -219,6 +259,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     if (isset($input['action'])) {
         switch ($input['action']) {
+            case 'add':
+                $controller->addProduct(
+                    $input['name'],
+                    $input['category_id'],
+                    $input['description'],
+                    $input['barcode'],
+                    $input['stock'],
+                    $input['price']
+                );
+                break;
+            case 'edit':
+                $controller->editProduct(
+                    $input['id'],
+                    $input['name'],
+                    $input['category_id'],
+                    $input['description'],
+                    $input['barcode'],
+                    $input['stock'],
+                    $input['price']
+                );
+                break;
+            case 'delete':
+                $controller->deleteProduct($input['id']);
+                break;
             case 'update_stock':
                 if (isset($input['product_id']) && isset($input['quantity'])) {
                     $controller->updateStock($input['product_id'], $input['quantity']);

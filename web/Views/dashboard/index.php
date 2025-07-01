@@ -270,6 +270,16 @@ $currentTime = date('H:i:s');
 
         // === FUNCIONES DE UTILIDAD (DEFINIDAS PRIMERO) ===
         
+        // Escuchar cambios de productos desde inventario y recargar productos automáticamente
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'pos_products_updated') {
+                // Recargar productos y categorías en el POS
+                loadCategories();
+                loadProducts();
+                showSuccessToast('🆕 Productos actualizados');
+            }
+        });
+
         // Toast notifications para feedback rápido
         function showSuccessToast(message) {
             console.log('showSuccessToast:', message);
@@ -1490,7 +1500,6 @@ $currentTime = date('H:i:s');
             const moduleMessages = {
                 'pos': '🛒 Módulo Punto de Venta - Ya estás aquí',
                 'products': '📦 Módulo Productos - Próximamente disponible',
-                'inventory': '📊 Módulo Inventario - En desarrollo',
                 'sales': '📈 Módulo Ventas - Funcionalidad futura',
                 'customers': '👥 Módulo Clientes - En construcción',
                 'reports': '📋 Módulo Reportes - Próximamente',
@@ -1498,6 +1507,12 @@ $currentTime = date('H:i:s');
             };
             
             const message = moduleMessages[module] || '🔧 Módulo no disponible';
+            
+            if (module === 'inventory') {
+                window.location.href = 'inventario/index.php'; // Redirigir a la vista de inventario
+                return;
+                
+            }
             
             if (module === 'pos') {
                 showSuccessToast(message);
@@ -1728,6 +1743,124 @@ $currentTime = date('H:i:s');
                 }
             });
         }
+
+        // === AUTOCOMPLETADO DE PRODUCTOS ===
+        // Agrega un input de búsqueda con autocompletado y mejora visual
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Autocompletado visual para el campo de búsqueda
+            const searchEl = document.getElementById('productSearch');
+            if (searchEl) {
+                // Crear contenedor de sugerencias
+                let suggestionBox = document.createElement('div');
+                suggestionBox.className = 'autocomplete-suggestions';
+                suggestionBox.style.display = 'none';
+                searchEl.parentNode.appendChild(suggestionBox);
+
+                searchEl.addEventListener('input', function() {
+                    const query = this.value.trim().toLowerCase();
+                    if (!query) {
+                        suggestionBox.style.display = 'none';
+                        suggestionBox.innerHTML = '';
+                        return;
+                    }
+                    // Filtrar productos por nombre o categoría
+                    const matches = products.filter(p =>
+                        p.name.toLowerCase().includes(query) ||
+                        (p.category_name && p.category_name.toLowerCase().includes(query))
+                    ).slice(0, 8); // Máximo 8 sugerencias
+                    if (matches.length === 0) {
+                        suggestionBox.style.display = 'none';
+                        suggestionBox.innerHTML = '';
+                        return;
+                    }
+                    suggestionBox.innerHTML = matches.map(prod =>
+                        `<div class="autocomplete-item" data-id="${prod.id}" data-name="${prod.name}" data-price="${prod.price}" data-category="${prod.category_id}" data-stock="${prod.stock}">
+                            <span class="autocomplete-name">${prod.name}</span>
+                            <span class="autocomplete-category">${prod.category_name || ''}</span>
+                            <span class="autocomplete-price">$${parseFloat(prod.price).toFixed(2)}</span>
+                        </div>`
+                    ).join('');
+                    suggestionBox.style.display = 'block';
+                });
+                // Click en sugerencia
+                suggestionBox.addEventListener('click', function(e) {
+                    const item = e.target.closest('.autocomplete-item');
+                    if (item) {
+                        addToCart(item.dataset.id, item.dataset.name, item.dataset.price, item.dataset.category, item.dataset.stock);
+                        searchEl.value = '';
+                        suggestionBox.style.display = 'none';
+                    }
+                });
+                // Ocultar sugerencias al perder foco
+                searchEl.addEventListener('blur', function() {
+                    setTimeout(() => { suggestionBox.style.display = 'none'; }, 150);
+                });
+                // Mostrar sugerencias al enfocar si hay texto
+                searchEl.addEventListener('focus', function() {
+                    if (this.value.trim()) {
+                        searchEl.dispatchEvent(new Event('input'));
+                    }
+                });
+            }
+        });
+
+        // === MEJORA DE DISEÑO PARA AUTOCOMPLETADO ===
+        const style = document.createElement('style');
+        style.innerHTML = `
+        .autocomplete-suggestions {
+            position: absolute;
+            z-index: 1001;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px #2c3e501a;
+            width: 100%;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-top: 2px;
+            font-size: 1rem;
+        }
+        .autocomplete-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover {
+            background: #eaf6fb;
+        }
+        .autocomplete-name {
+            font-weight: 600;
+            color: #3498db;
+            flex: 1;
+        }
+        .autocomplete-category {
+            color: #888;
+            font-size: 0.95em;
+            margin-left: 1.2em;
+            flex: 0 0 110px;
+            text-align: right;
+        }
+        .autocomplete-price {
+            background: #eaf6fb;
+            color: #217dbb;
+            border-radius: 6px;
+            padding: 0.2em 0.7em;
+            margin-left: 1em;
+            font-weight: 500;
+            font-size: 0.98em;
+        }
+        @media (max-width: 700px) {
+            .autocomplete-suggestions { font-size: 0.97em; }
+            .autocomplete-category { flex-basis: 70px; }
+        }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

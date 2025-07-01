@@ -122,6 +122,22 @@ ON DUPLICATE KEY UPDATE
     cost = VALUES(cost),
     stock = VALUES(stock);
 
+-- 10 productos adicionales de ejemplo
+INSERT INTO products (name, description, price, cost, stock, min_stock, category_id, barcode) VALUES
+('Sprite 500ml', 'Gaseosa Sprite 500ml', 2.20, 1.30, 28, 10, 1, '7750182004056'),
+('Fanta 500ml', 'Gaseosa Fanta naranja 500ml', 2.20, 1.30, 26, 10, 1, '7750182004063'),
+('Agua Cielo 600ml', 'Agua mineral sin gas', 1.00, 0.60, 60, 15, 1, '7750182004070'),
+('Red Bull Lata', 'Bebida energética Red Bull 250ml', 4.50, 3.00, 15, 5, 1, '7750182004087'),
+('Pringles Original', 'Papas Pringles tubo original', 3.50, 2.20, 18, 5, 2, '7750182004094'),
+('Cheetos Queso', 'Cheetos sabor queso 150g', 1.90, 1.10, 22, 5, 2, '7750182004100'),
+('Halls Mentho-Lyptus', 'Caramelos Halls mentolados', 0.80, 0.40, 80, 20, 3, '7750182004117'),
+('Sublime Blanco', 'Chocolate Sublime blanco', 1.30, 0.90, 40, 10, 3, '7750182004124'),
+('Galletas Casino', 'Galletas Casino vainilla', 1.50, 1.00, 35, 10, 3, '7750182004131'),
+('Chocman', 'Bizcocho relleno de manjar', 1.10, 0.70, 50, 10, 3, '7750182004148'),
+('Monster Energy', 'Bebida energética Monster lata 473ml', 5.00, 3.50, 12, 5, 1, '7750182004155'),
+('M&M Peanut', 'Dulces M&M rellenos de maní 45g', 2.10, 1.40, 38, 10, 3, '7750182004162')
+ON DUPLICATE KEY UPDATE price=VALUES(price), cost=VALUES(cost), stock=VALUES(stock);
+
 -- Insertar usuario administrador (contraseña: admin123 - MD5: 0192023a7bbd73250516f069df18b500)
 INSERT INTO users (username, email, password, created_at) VALUES 
 ('admin', 'admin@puntod.com', '0192023a7bbd73250516f069df18b500', NOW())
@@ -131,26 +147,3 @@ ON DUPLICATE KEY UPDATE password = '0192023a7bbd73250516f069df18b500';
 INSERT INTO customers (name, email, document_type, document_number) VALUES 
 ('Cliente General', 'general@cliente.com', 'dni', '00000000')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
-
--- Verificar que las tablas se crearon correctamente
-DESCRIBE users;
-DESCRIBE categories;
-DESCRIBE products;
-DESCRIBE sales;
-DESCRIBE sale_items;
-DESCRIBE customers;
-
--- Mostrar datos de ejemplo
-SELECT 'USUARIOS:' as 'TABLA';
-SELECT id, username, email, is_active, created_at FROM users;
-
-SELECT 'CATEGORÍAS:' as 'TABLA';
-SELECT * FROM categories;
-
-SELECT 'PRODUCTOS:' as 'TABLA';
-SELECT p.id, p.name, p.price, p.stock, c.name as category 
-FROM products p 
-LEFT JOIN categories c ON p.category_id = c.id;
-
-SELECT 'CLIENTES:' as 'TABLA';
-SELECT id, name, email, document_number FROM customers;
