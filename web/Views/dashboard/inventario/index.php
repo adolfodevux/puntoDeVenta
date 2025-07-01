@@ -60,17 +60,152 @@ while ($row = $resCat->fetch_assoc()) {
         @media (max-width: 900px) {
             .table-inventario { font-size: 0.98rem; min-width: 600px; }
             .inventario-header h2 { font-size: 1.3rem; }
+            .btn-add { padding: 0.6rem 1.5rem; font-size: 1rem; }
         }
         @media (max-width: 700px) {
-            .inventario-container { padding: 0.5rem; border-radius: 0.7rem; }
-            .inventario-header { flex-direction: column; gap: 1.2rem; }
+            .inventario-container { padding: 0.5rem; border-radius: 0.7rem; margin: 1rem auto; }
+            .inventario-header { 
+                flex-direction: column; 
+                gap: 1.2rem; 
+                align-items: stretch;
+                text-align: center;
+            }
             .inventario-header h2 { font-size: 1.1rem; }
+            .inventario-header > div { 
+                justify-content: center; 
+                flex-wrap: wrap;
+            }
             .table-inventario { font-size: 0.92rem; min-width: 480px; }
             .table-inventario th, .table-inventario td { padding: 0.6em 0.3em; }
+            .search-box input { width: 180px !important; font-size: 0.9rem !important; }
+            .btn-add { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
         }
         @media (max-width: 520px) {
+            .inventario-container { 
+                margin: 0.5rem; 
+                padding: 0.3rem; 
+                border-radius: 0.5rem;
+            }
+            .inventario-header { gap: 1rem; }
+            .inventario-header h2 { font-size: 1rem; }
             .table-inventario { font-size: 0.85rem; min-width: 350px; }
             .table-inventario th, .table-inventario td { padding: 0.4em 0.1em; }
+            .table-inventario th { font-size: 0.8rem; }
+            .search-box input { 
+                width: 150px !important; 
+                font-size: 0.8rem !important;
+                padding: 0.5em 1.8em 0.5em 0.8em !important;
+            }
+            .btn-add { 
+                padding: 0.4rem 1rem; 
+                font-size: 0.8rem;
+                border-radius: 30px;
+            }
+            .badge-stock, .badge-price { 
+                font-size: 0.7rem;
+                padding: 0.2em 0.6em;
+            }
+            .btn-edit, .btn-delete { 
+                width: 28px !important; 
+                height: 28px !important; 
+                font-size: 0.9rem !important;
+            }
+        }
+        @media (max-width: 480px) {
+            body { background: #e0eafc; }
+            .inventario-container { 
+                margin: 0.2rem; 
+                padding: 0.2rem;
+                max-width: 100%;
+            }
+            .inventario-header { 
+                padding-bottom: 0.8rem;
+                margin-bottom: 1.5rem;
+            }
+            .inventario-header h2 { font-size: 0.9rem; }
+            .inventario-header > div { 
+                flex-direction: column;
+                gap: 0.8rem;
+                align-items: center;
+            }
+            .search-box { 
+                width: 100%;
+                max-width: 200px;
+            }
+            .search-box input { 
+                width: 100% !important;
+                font-size: 0.75rem !important;
+            }
+            .btn-add { 
+                padding: 0.3rem 0.8rem; 
+                font-size: 0.75rem;
+                min-width: 80px;
+            }
+            .table-responsive { 
+                margin-top: 1rem !important;
+                border-radius: 0.5rem;
+                overflow-x: auto;
+            }
+            .table-inventario { 
+                min-width: 320px;
+                font-size: 0.7rem;
+            }
+            .table-inventario th, .table-inventario td { 
+                padding: 0.3em 0.1em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 80px;
+            }
+            .table-inventario th:first-child,
+            .table-inventario td:first-child { 
+                max-width: 60px;
+            }
+            .table-inventario th:nth-child(3),
+            .table-inventario td:nth-child(3) { 
+                max-width: 50px;
+            }
+            .badge-stock, .badge-price { 
+                font-size: 0.6rem;
+                padding: 0.1em 0.4em;
+            }
+            .btn-edit, .btn-delete { 
+                width: 24px !important; 
+                height: 24px !important; 
+                font-size: 0.7rem !important;
+                margin-right: 0.1em !important;
+            }
+        }
+        @media (max-width: 360px) {
+            .inventario-container { 
+                margin: 0.1rem; 
+                padding: 0.1rem;
+            }
+            .inventario-header h2 { font-size: 0.8rem; }
+            .btn-add { 
+                padding: 0.25rem 0.6rem; 
+                font-size: 0.7rem;
+            }
+            .table-inventario { 
+                min-width: 280px;
+                font-size: 0.65rem;
+            }
+            .table-inventario th, .table-inventario td { 
+                padding: 0.2em 0.05em;
+                max-width: 60px;
+            }
+            .btn-edit, .btn-delete { 
+                width: 20px !important; 
+                height: 20px !important; 
+                font-size: 0.6rem !important;
+            }
+            /* Ocultar algunas columnas en pantallas muy pequeñas */
+            .table-inventario th:nth-child(3),
+            .table-inventario td:nth-child(3),
+            .table-inventario th:nth-child(4),
+            .table-inventario td:nth-child(4) { 
+                display: none;
+            }
         }
         /* Paginación moderna */
         #paginationNav {
@@ -79,6 +214,12 @@ while ($row = $resCat->fetch_assoc()) {
             align-items: center;
             justify-content: center;
             margin-top: 2rem;
+            flex-wrap: wrap;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         #paginationNav button {
             border: none;
@@ -108,6 +249,66 @@ while ($row = $resCat->fetch_assoc()) {
             height: 2.5em;
             background: none;
             font-size: 1.5rem;
+        }
+        
+        /* Responsive para paginación */
+        @media (max-width: 768px) {
+            #paginationNav {
+                margin-top: 1.5rem;
+                gap: 0.3rem;
+                padding: 0.8rem;
+            }
+            #paginationNav button {
+                width: 2em;
+                height: 2em;
+                font-size: 0.9rem;
+            }
+            #paginationNav .nav-arrow {
+                width: 2.2em;
+                height: 2.2em;
+                font-size: 1.2rem;
+            }
+        }
+        @media (max-width: 480px) {
+            #paginationNav {
+                margin-top: 1rem;
+                gap: 0.2rem;
+                padding: 0.5rem;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            #paginationNav button {
+                width: 1.8em;
+                height: 1.8em;
+                font-size: 0.8rem;
+            }
+            #paginationNav .nav-arrow {
+                width: 2em;
+                height: 2em;
+                font-size: 1rem;
+                flex: 0 0 auto;
+            }
+            /* Contenedor para números de página */
+            #paginationNav button:not(.nav-arrow) {
+                flex: 0 0 auto;
+                margin: 0 0.1rem;
+            }
+        }
+        @media (max-width: 360px) {
+            #paginationNav {
+                gap: 0.1rem;
+                padding: 0.3rem;
+            }
+            #paginationNav button {
+                width: 1.5em;
+                height: 1.5em;
+                font-size: 0.7rem;
+            }
+            #paginationNav .nav-arrow {
+                width: 1.8em;
+                height: 1.8em;
+                font-size: 0.9rem;
+            }
         }
         
         /* Estilos para SweetAlert2 - Notificaciones */
