@@ -156,7 +156,7 @@ $currentTime = date('H:i:s');
                         <div class="pagination-controls">
                             <button class="pagination-btn" id="prevPageBtn" disabled>
                                 <i class="fas fa-chevron-left"></i>
-                                Anterior
+                                Anteriorfa-dollar-sign
                             </button>
                             <div class="page-numbers" id="pageNumbers">
                                 <!-- Los números de página se generarán dinámicamente -->

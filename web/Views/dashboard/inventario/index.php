@@ -606,7 +606,7 @@ function renderProductosPage(page, dataOverride) {
             <td>${desc}</td>
             <td>${barcode}</td>
             <td><span class='badge-stock'><i class='fa fa-box'></i> ${prod.stock}</span></td>
-            <td><span class='badge-price'><i class='fa fa-dollar-sign'></i> $${parseFloat(prod.price).toFixed(2)}</span></td>
+            <td><span class='badge-price'><i ></i> $${parseFloat(prod.price).toFixed(2)}</span></td>
             <td>
                 <button class='btn-edit' title='Editar' onclick="openEditModal(${prod.id}, '${name}', ${prod.category_id}, '${desc}', '${barcode}', ${prod.stock}, ${prod.price})"><i class='fa-solid fa-pen-to-square'></i></button>
                 <button class='btn-delete' title='Eliminar' onclick='deleteProduct(${prod.id})'><i class='fa-solid fa-trash'></i></button>
