@@ -13,6 +13,15 @@ $username = $_SESSION['username'] ?? 'Usuario';
 $email = $_SESSION['email'] ?? '';
 $userId = $_SESSION['user_id'] ?? '';
 
+// Controlar mensaje de bienvenida - solo una vez por sesión
+$showWelcome = !isset($_SESSION['welcome_shown']);
+if ($showWelcome) {
+    $_SESSION['welcome_shown'] = true;
+}
+
+// Obtener clientes registrados en sesión para el selector del POS
+$clientes_pos = isset($_SESSION['clientes']) ? $_SESSION['clientes'] : [];
+
 // Obtener fecha y hora actual
 $currentDate = date('d/m/Y');
 $currentTime = date('H:i:s');
@@ -57,16 +66,17 @@ $currentTime = date('H:i:s');
                             <span>Punto Venta</span>
                         </a>
                     </li>
+                   
                     <li class="nav-item">
-                        <a href="#" data-module="products">
-                            <i class="fas fa-box"></i>
-                            <span>Productos</span>
+                        <a href="#" data-module="inventory">
+                           <i class="fas fa-box"></i>
+                            <span>Inventario</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" data-module="inventory">
-                            <i class="fas fa-warehouse"></i>
-                            <span>Inventario</span>
+                           <i class="fas fa-box"></i>
+                            <span>Categorias</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -156,7 +166,7 @@ $currentTime = date('H:i:s');
                         <div class="pagination-controls">
                             <button class="pagination-btn" id="prevPageBtn" disabled>
                                 <i class="fas fa-chevron-left"></i>
-                                Anteriorfa-dollar-sign
+                                Anterior
                             </button>
                             <div class="page-numbers" id="pageNumbers">
                                 <!-- Los números de página se generarán dinámicamente -->
@@ -194,6 +204,23 @@ $currentTime = date('H:i:s');
                     
                     <div class="cart-summary">
                         <div class="summary-row">
+                            <label for="clienteSearch" style="font-weight:600;">Cliente <span style="color:#888;font-weight:normal;">(opcional)</span>:</label>
+                            <div class="cliente-search-container" style="position: relative;">
+                                <input 
+                                    type="text" 
+                                    id="clienteSearch" 
+                                    placeholder="Buscar por nombre o ID (opcional)..." 
+                                    style="width:100%;padding:7px 10px;border-radius:6px;border:1.5px solid #b2c9e6;margin-bottom:5px;"
+                                    autocomplete="off"
+                                >
+                                <div id="clienteSuggestions" class="cliente-suggestions" style="display:none;"></div>
+                                <div id="selectedClienteDisplay" style="display:none; padding:5px; background:#e8f5e8; border-radius:4px; font-size:0.85rem; margin-bottom:5px;">
+                                    <span id="selectedClienteText"></span>
+                                    <button type="button" onclick="clearSelectedCliente()" style="float:right; background:none; border:none; color:#666; cursor:pointer;">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="summary-row">
                             <span>Subtotal:</span>
                             <span id="subtotal">$0.00</span>
                         </div>
@@ -207,19 +234,9 @@ $currentTime = date('H:i:s');
                         </div>
                         
                         <div class="payment-section">
-                            <h4>Método de Pago</h4>
-                            <div class="payment-methods">
-                                <button class="payment-btn active" data-method="cash">
-                                    <i class="fas fa-money-bill"></i>
-                                    Efectivo
-                                </button>
-                                <button class="payment-btn" data-method="card">
-                                    <i class="fas fa-credit-card"></i>
-                                    Tarjeta
-                                </button>
-                            </div>
+                            <h4>Pago en Efectivo</h4>
                             
-                            <div class="payment-input">
+                            <div class="payment-input" id="cashPaymentInput" style="display: block;">
                                 <label for="amountPaid">Monto recibido:</label>
                                 <input type="number" id="amountPaid" placeholder="0.00" step="0.01">
                                 <div class="change-display">
@@ -244,10 +261,11 @@ $currentTime = date('H:i:s');
         
         // Variables globales
         let cart = [];
-        let selectedPaymentMethod = 'cash';
+        let selectedPaymentMethod = 'cash'; // Solo efectivo
         let products = [];
         let categories = [];
         let cartExpanded = false; // Estado del carrito expandido
+        let selectedCliente = '';
         
         // Variables de paginación
         let currentPage = 1;
@@ -685,9 +703,13 @@ $currentTime = date('H:i:s');
             console.log('=== DOM CARGADO - INICIANDO APLICACIÓN ===');
             
             try {
-                // Mostrar bienvenida simple primero
+                // Mostrar bienvenida solo una vez por sesión
+                <?php if ($showWelcome): ?>
                 console.log('Mostrando bienvenida...');
                 showSimpleWelcome();
+                <?php else: ?>
+                console.log('Bienvenida ya mostrada en esta sesión');
+                <?php endif; ?>
                 
                 // Configurar menú móvil
                 console.log('Configurando menú móvil...');
@@ -722,19 +744,7 @@ $currentTime = date('H:i:s');
                     console.error('❌ clearCartBtn NO encontrado');
                 }
 
-                // Event listeners para métodos de pago
-                const paymentBtns = document.querySelectorAll('.payment-btn');
-                console.log('💳 payment-btn encontrados:', paymentBtns.length);
-                paymentBtns.forEach(btn => {
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        console.log('Payment method selected:', this.dataset.method);
-                        paymentBtns.forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-                        selectedPaymentMethod = this.dataset.method;
-                        showSuccessToast(`💳 Método: ${selectedPaymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}`);
-                    });
-                });
+                // Solo efectivo - sin event listeners para métodos de pago
 
                 // Event listener para monto recibido
                 const amountPaidEl = document.getElementById('amountPaid');
@@ -771,6 +781,15 @@ $currentTime = date('H:i:s');
                     });
                 } else {
                     console.error('❌ productSearch NO encontrado');
+                }
+
+                // Event listener para búsqueda de clientes
+                const clienteSearchEl = document.getElementById('clienteSearch');
+                if (clienteSearchEl) {
+                    console.log('✅ clienteSearch encontrado');
+                    setupClienteSearch();
+                } else {
+                    console.error('❌ clienteSearch NO encontrado');
                 }
 
                 // Event listeners para navegación del sidebar (excluyendo logout)
@@ -1152,17 +1171,17 @@ $currentTime = date('H:i:s');
                 return;
             }
             
-            showConfirmation(
-                '¿Limpiar Carrito?',
-                '¿Estás seguro de que quieres eliminar todos los productos del carrito?',
-                function() {
-                    cart = [];
-                    renderCart();
-                    calculateSubtotal();
-                    updateCheckoutBtn();
-                    showSuccessToast('🗑️ Carrito limpiado correctamente');
-                }
-            );
+            // Limpiar directamente sin confirmación
+            cart = [];
+            renderCart();
+            calculateSubtotal();
+            
+            // Limpiar campos de pago
+            document.getElementById('amountPaid').value = '';
+            document.getElementById('change').textContent = '0.00';
+            
+            updateCheckoutBtn();
+            showSuccessToast('🗑️ Carrito limpiado correctamente');
         }
 
         // Función para eliminar un producto específico del carrito
@@ -1178,7 +1197,7 @@ $currentTime = date('H:i:s');
             }
         }
 
-        // Renderizar carrito
+       
         function renderCart() {
             const cartItemsContainer = document.getElementById('cartItems');
             cartItemsContainer.innerHTML = '';
@@ -1307,6 +1326,9 @@ $currentTime = date('H:i:s');
             if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
             if (taxEl) taxEl.textContent = `$${tax.toFixed(2)}`;
             if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+            
+            // Retornar el total calculado
+            return total;
         }
 
         // Calcular y mostrar el cambio al ingresar el monto recibido
@@ -1340,7 +1362,10 @@ $currentTime = date('H:i:s');
             const amountPaid = parseFloat(amountPaidEl.value || 0);
             const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
             
-            if (cart.length > 0 && !isNaN(amountPaid) && amountPaid >= total && total > 0) {
+            // Solo efectivo - requiere monto suficiente
+            const canCheckout = cart.length > 0 && total > 0 && !isNaN(amountPaid) && amountPaid >= total;
+            
+            if (canCheckout) {
                 checkoutBtn.disabled = false;
                 checkoutBtn.classList.remove('disabled');
             } else {
@@ -1353,132 +1378,152 @@ $currentTime = date('H:i:s');
         function processCheckout() {
             console.log('processCheckout() iniciada');
             
+            // Verificar que el carrito no esté vacío
             if (cart.length === 0) {
-                showErrorToast('❌ El carrito está vacío');
+                showErrorToast('El carrito está vacío');
                 return;
             }
             
-            const totalEl = document.getElementById('total');
-            const amountPaidEl = document.getElementById('amountPaid');
-            const changeEl = document.getElementById('change');
+            const total = calculateSubtotal();
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
             
-            if (!totalEl || !amountPaidEl || !changeEl) {
-                showErrorToast('❌ Error en los elementos de pago');
-                return;
-            }
-            
-            const total = parseFloat(totalEl.textContent?.replace('$', '') || 0);
-            const amountPaid = parseFloat(amountPaidEl.value || 0);
-            const change = parseFloat(changeEl.textContent || 0);
-            
+            // Validar monto para efectivo
             if (amountPaid < total) {
-                showErrorToast('❌ El monto recibido es insuficiente');
+                showErrorToast('El monto recibido es insuficiente');
                 return;
             }
             
-            // Mostrar confirmación de venta
-            showConfirmation(
-                '¿Procesar Venta?',
-                `Total: $${total.toFixed(2)}\nRecibido: $${amountPaid.toFixed(2)}\nCambio: $${change.toFixed(2)}\n\n¿Confirmar la venta?`,
-                function() {
-                    // Procesar la venta
-                    processSale(total, amountPaid, change);
+            // Mostrar confirmación antes de procesar la venta
+            const clienteTexto = selectedClienteData ? selectedClienteData.nombre : 'Sin cliente';
+            const cambio = amountPaid - total;
+            
+            Swal.fire({
+                title: '¿Procesar esta venta?',
+                html: `
+                    <div style="text-align: left; padding: 1rem;">
+                        <p><strong>Cliente:</strong> ${clienteTexto}</p>
+                        <p><strong>Total:</strong> $${total.toFixed(2)}</p>
+                        <p><strong>Monto recibido:</strong> $${amountPaid.toFixed(2)}</p>
+                        <p><strong>Cambio:</strong> $${cambio.toFixed(2)}</p>
+                        <p><strong>Productos:</strong> ${cart.length} artículo(s)</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '✅ Sí, procesar venta',
+                cancelButtonText: '❌ Cancelar',
+                confirmButtonColor: '#27ae60',
+                cancelButtonColor: '#e74c3c',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceder con la venta
+                    executeCheckout(total, amountPaid);
                 }
-            );
+            });
         }
         
-        // Función para procesar la venta efectivamente
-        async function processSale(total, amountPaid, change) {
-            console.log('processSale() iniciada');
+        // Función separada para ejecutar el checkout después de la confirmación
+        function executeCheckout(total, amountPaid) {
+            // Preparar datos de la compra
+            const compra = {
+                productos: cart.map(item => ({
+                    id: item.id, // Agregar ID del producto para descuento de stock
+                    nombre: item.name,
+                    cantidad: item.quantity,
+                    precio: item.price
+                })),
+                total: total,
+                metodo_pago: 'cash', // Solo efectivo
+                monto_recibido: amountPaid,
+                cambio: amountPaid - total,
+                fecha: new Date().toLocaleString('es-ES')
+            };
             
-            try {
-                // Mostrar loading
-                Swal.fire({
-                    title: 'Procesando venta...',
-                    text: 'Por favor espera',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Preparar datos de la venta
-                const saleData = {
-                    items: cart.map(item => ({
-                        product_id: item.id,
-                        quantity: item.quantity,
-                        price: item.price,
-                        subtotal: item.price * item.quantity
-                    })),
-                    payment_method: selectedPaymentMethod,
-                    subtotal: total / 1.16, // Sin IVA
-                    tax: total * 0.16 / 1.16, // IVA
-                    total: total,
-                    amount_paid: amountPaid,
-                    change: change
-                };
-                
-                console.log('Datos de venta:', saleData);
-                
-                // Aquí normalmente enviarías los datos al servidor
-                // const response = await fetch('../../Controllers/SalesController.php', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(saleData)
-                // });
-                
-                // Simular procesamiento exitoso por ahora
-                setTimeout(() => {
-                    // Limpiar carrito y resetear formulario
-                    cart = [];
-                    document.getElementById('amountPaid').value = '';
-                    document.getElementById('change').textContent = '0.00';
-                    
-                    renderCart();
-                    calculateSubtotal();
-                    updateCheckoutBtn();
-                    
-                    // Contraer carrito automáticamente en móvil después de la compra
-                    if (window.innerWidth <= 768 && cartExpanded) {
-                        toggleCartExpansion();
-                    }
-                    
-                    // Mostrar éxito
+            // Cliente es opcional - puede ser null
+            const clienteId = selectedClienteData ? selectedClienteData.id : null;
+            const clienteNombre = selectedClienteData ? selectedClienteData.nombre : null;
+            
+            console.log('Procesando venta:', {
+                cliente: clienteNombre || 'Sin cliente',
+                total: total,
+                metodo: selectedPaymentMethod,
+                productos: compra.productos.length
+            });
+            
+            // Enviar por fetch al nuevo endpoint para guardar en la base de datos
+            fetch('guardar_venta.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    clienteId: clienteId, 
+                    clienteNombre: clienteNombre,
+                    compra: compra 
+                })
+            }).then(res => {
+                if (!res.ok) {
+                    throw new Error(`Error HTTP: ${res.status}`);
+                }
+                return res.json();
+            }).then(data => {
+                if (data.success) {
+                    // Mostrar SweetAlert de venta completada
                     Swal.fire({
-                        title: '¡Venta Procesada!',
+                        title: '🎉 ¡Venta Completada!',
                         html: `
                             <div style="text-align: center; padding: 1rem;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-                                <p><strong>Total:</strong> $${total.toFixed(2)}</p>
-                                <p><strong>Recibido:</strong> $${amountPaid.toFixed(2)}</p>
-                                <p><strong>Cambio:</strong> $${change.toFixed(2)}</p>
-                                <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                                    <p style="margin: 0; color: #28a745; font-weight: 600;">✔️ Venta registrada exitosamente</p>
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                                <h3 style="color: #27ae60; margin-bottom: 1rem;">Venta #${data.sale_id}</h3>
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                                    <p style="margin: 0.5rem 0;"><strong>Total:</strong> $${data.total.toFixed(2)}</p>
+                                    <p style="margin: 0.5rem 0;"><strong>Cliente:</strong> ${data.cliente_nombre || 'Sin cliente'}</p>
+                                    <p style="margin: 0.5rem 0;"><strong>Método:</strong> Efectivo</p>
+                                    <p style="margin: 0.5rem 0;"><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</p>
                                 </div>
+                                <p style="color: #666; font-size: 0.9rem;">La venta ha sido registrada exitosamente en el sistema</p>
                             </div>
                         `,
                         icon: 'success',
-                        confirmButtonText: '🎯 Nueva Venta',
-                        confirmButtonColor: '#28a745',
-                        timer: 10000,
-                        timerProgressBar: true
-                    }).then(() => {
-                        showSuccessToast('🎉 ¡Listo para la siguiente venta!');
+                        showCancelButton: true,
+                        confirmButtonText: '🛒 Nueva Venta',
+                        cancelButtonText: '📊 Ver Ventas',
+                        confirmButtonColor: '#27ae60',
+                        cancelButtonColor: '#3498db',
+                        reverseButtons: true,
+                        allowOutsideClick: false,
+                        customClass: {
+                            confirmButton: 'btn-nueva-venta',
+                            cancelButton: 'btn-ver-ventas'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Nueva venta - recargar la página
+                            showSuccessToast('🛒 Recargando para nueva venta...');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            // Ver ventas - redirigir o mostrar módulo de ventas
+                            showInfo('📊 Módulo de ventas próximamente disponible');
+                            // Aquí puedes agregar la redirección cuando tengas el módulo de ventas
+                            // window.location.href = '../ventas/index.php';
+                        }
                     });
-                }, 1500);
-                
-            } catch (error) {
+                    
+                    // Limpiar campos inmediatamente después de procesar la venta
+                    clearCart();
+                    if (selectedClienteData) {
+                        clearSelectedCliente(); // Limpiar cliente seleccionado solo si había uno
+                    }
+                    document.getElementById('amountPaid').value = '';
+                    document.getElementById('change').textContent = '0.00';
+                } else {
+                    showErrorToast('❌ ' + data.message);
+                }
+            }).catch(error => {
                 console.error('Error al procesar venta:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudo procesar la venta: ' + error.message,
-                    icon: 'error',
-                    confirmButtonText: 'Reintentar',
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
+                showErrorToast('❌ Error de conexión: ' + error.message);
+            });
         }
         
         // Función para cambiar entre módulos del sistema
@@ -1488,12 +1533,14 @@ $currentTime = date('H:i:s');
             // Funcionalidad básica de módulos
             const moduleMessages = {
                 'pos': '🛒 Módulo Punto de Venta - Ya estás aquí',
-                'products': '📦 Módulo Productos - Próximamente disponible',
                 'sales': '📈 Módulo Ventas - Funcionalidad futura',
-                'customers': '👥 Módulo Clientes - En construcción',
-                'reports': '📋 Módulo Reportes - Próximamente',
-                'settings': '⚙️ Módulo Configuración - En desarrollo'
+            
             };
+            
+            if (module === 'customers') {
+                window.location.href = '../../Views/clientes/index.php';
+                return;
+            }
             
             const message = moduleMessages[module] || '🔧 Módulo no disponible';
             
@@ -1641,17 +1688,7 @@ $currentTime = date('H:i:s');
                 };
             }
             
-            // Event listeners para métodos de pago
-            const paymentBtns = document.querySelectorAll('.payment-btn');
-            paymentBtns.forEach(btn => {
-                btn.onclick = function(e) {
-                    e.preventDefault();
-                    document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedPaymentMethod = this.dataset.method;
-                    showSuccessToast(`💳 ${selectedPaymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'} seleccionado`);
-                };
-            });
+            // Solo efectivo - sin event listeners para métodos de pago
             
             // Event listener para monto recibido
             const amountPaidEl = document.getElementById('amountPaid');
@@ -1659,14 +1696,7 @@ $currentTime = date('H:i:s');
                 amountPaidEl.oninput = calculateChange;
             }
             
-            // Event listener para botón de checkout
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            if (checkoutBtn) {
-                checkoutBtn.onclick = function(e) {
-                    e.preventDefault();
-                    processCheckout();
-                };
-            }
+            // Event listener para botón de checkout eliminado - ya está en la función principal
             
             console.log('✅ Event listeners configurados');
         }
@@ -1678,6 +1708,162 @@ $currentTime = date('H:i:s');
         console.log('🎮 Comandos de consola disponibles:');
         console.log('  - testPOS() : Probar funcionalidad del sistema');
         console.log('  - reinitPOS() : Reinicializar sistema');
+
+        // === FUNCIONES PARA BÚSQUEDA DE CLIENTES ===
+        
+        // Variable para almacenar el cliente seleccionado
+        let selectedClienteData = null;
+        let clienteSearchTimeout = null;
+        
+        // Configurar la funcionalidad de búsqueda de clientes
+        function setupClienteSearch() {
+            const clienteSearchEl = document.getElementById('clienteSearch');
+            const clienteSuggestionsEl = document.getElementById('clienteSuggestions');
+            
+            if (!clienteSearchEl || !clienteSuggestionsEl) {
+                console.error('Elementos de búsqueda de clientes no encontrados');
+                return;
+            }
+            
+            // Event listener para búsqueda
+            clienteSearchEl.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                // Limpiar timeout anterior
+                if (clienteSearchTimeout) {
+                    clearTimeout(clienteSearchTimeout);
+                }
+                
+                if (query.length < 1) {
+                    hideclienteSuggestions();
+                    return;
+                }
+                
+                // Búsqueda con debounce de 300ms
+                clienteSearchTimeout = setTimeout(() => {
+                    searchClientes(query);
+                }, 300);
+            });
+            
+            // Ocultar sugerencias al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.cliente-search-container')) {
+                    hideclienteSuggestions();
+                }
+            });
+            
+            console.log('✅ Búsqueda de clientes configurada correctamente');
+        }
+        
+        // Buscar clientes en la base de datos
+        async function searchClientes(query) {
+            try {
+                console.log('Buscando clientes:', query);
+                
+                const response = await fetch(`../../api/clientes.php?search=${encodeURIComponent(query)}&limit=8`);
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayClienteSuggestions(data.data);
+                } else {
+                    console.error('Error al buscar clientes:', data.message);
+                    showErrorToast('Error al buscar clientes');
+                }
+                
+            } catch (error) {
+                console.error('Error en búsqueda de clientes:', error);
+                showErrorToast('Error de conexión al buscar clientes');
+            }
+        }
+        
+        // Mostrar las sugerencias de clientes
+        function displayClienteSuggestions(clientes) {
+            const clienteSuggestionsEl = document.getElementById('clienteSuggestions');
+            
+            if (!clienteSuggestionsEl) return;
+            
+            if (clientes.length === 0) {
+                clienteSuggestionsEl.innerHTML = '<div class="cliente-suggestion-item" style="text-align:center; color:#666; font-style:italic;">No se encontraron clientes</div>';
+                clienteSuggestionsEl.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            clientes.forEach(cliente => {
+                html += `
+                    <div class="cliente-suggestion-item" onclick="selectCliente(${cliente.id}, '${cliente.nombre}', '${cliente.telefono}')">
+                        <div class="cliente-name">${cliente.nombre}</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="cliente-id">#${cliente.id}</span>
+                            <span class="cliente-phone">${cliente.telefono}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            clienteSuggestionsEl.innerHTML = html;
+            clienteSuggestionsEl.style.display = 'block';
+        }
+        
+        // Seleccionar un cliente
+        function selectCliente(id, nombre, telefono) {
+            selectedClienteData = { id, nombre, telefono };
+            selectedCliente = id; // Variable global para compatibilidad
+            
+            // Actualizar interfaz
+            const clienteSearchEl = document.getElementById('clienteSearch');
+            const selectedClienteDisplayEl = document.getElementById('selectedClienteDisplay');
+            const selectedClienteTextEl = document.getElementById('selectedClienteText');
+            
+            if (clienteSearchEl) {
+                clienteSearchEl.value = '';
+                clienteSearchEl.placeholder = 'Cliente seleccionado...';
+            }
+            
+            if (selectedClienteDisplayEl && selectedClienteTextEl) {
+                selectedClienteTextEl.textContent = `#${id} - ${nombre} (${telefono})`;
+                selectedClienteDisplayEl.style.display = 'block';
+            }
+            
+            hideclienteSuggestions();
+            
+            console.log('Cliente seleccionado:', selectedClienteData);
+            showSuccessToast(`Cliente seleccionado: ${nombre}`);
+        }
+        
+        // Limpiar selección de cliente
+        function clearSelectedCliente() {
+            selectedClienteData = null;
+            selectedCliente = ''; // Variable global para compatibilidad
+            
+            const clienteSearchEl = document.getElementById('clienteSearch');
+            const selectedClienteDisplayEl = document.getElementById('selectedClienteDisplay');
+            
+            if (clienteSearchEl) {
+                clienteSearchEl.value = '';
+                clienteSearchEl.placeholder = 'Buscar por nombre o ID...';
+            }
+            
+            if (selectedClienteDisplayEl) {
+                selectedClienteDisplayEl.style.display = 'none';
+            }
+            
+            console.log('Cliente deseleccionado');
+            showWarningToast('Cliente deseleccionado');
+        }
+        
+        // Ocultar sugerencias de clientes
+        function hideclienteSuggestions() {
+            const clienteSuggestionsEl = document.getElementById('clienteSuggestions');
+            if (clienteSuggestionsEl) {
+                clienteSuggestionsEl.style.display = 'none';
+            }
+        }
 
         // Función para manejar el logout con confirmación
         function handleLogout() {
@@ -1794,9 +1980,104 @@ $currentTime = date('H:i:s');
             }
         });
 
-        // === MEJORA DE DISEÑO PARA AUTOCOMPLETADO ===
+        // === MEJORA DE DISEÑO PARA AUTOCOMPLETADO DE PRODUCTOS Y CLIENTES ===
         const style = document.createElement('style');
         style.innerHTML = `
+        /* Estilos para búsqueda de clientes */
+        .cliente-search-container {
+            position: relative;
+        }
+        .cliente-suggestions {
+            position: absolute;
+            z-index: 1002;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(44, 62, 80, 0.1);
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 2px;
+            font-size: 0.9rem;
+        }
+        .cliente-suggestion-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+        .cliente-suggestion-item:last-child { 
+            border-bottom: none; 
+        }
+        .cliente-suggestion-item:hover {
+            background: #f8f9fa;
+        }
+        .cliente-name {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .cliente-id {
+            color: #666;
+            font-size: 0.8em;
+            margin-right: 8px;
+        }
+        .cliente-phone {
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        /* Responsive para búsqueda de clientes */
+        @media (max-width: 768px) {
+            .cliente-suggestions {
+                font-size: 0.85rem;
+                max-height: 150px;
+            }
+            .cliente-name {
+                font-size: 0.85rem;
+            }
+            .cliente-id, .cliente-phone {
+                font-size: 0.75em;
+            }
+            .cliente-suggestion-item {
+                padding: 6px 10px;
+            }
+        }
+        
+        /* Estilos personalizados para SweetAlert de venta completada */
+        .btn-nueva-venta {
+            background: #27ae60 !important;
+            border-color: #27ae60 !important;
+            font-weight: 600 !important;
+            padding: 12px 24px !important;
+            font-size: 1rem !important;
+        }
+        
+        .btn-nueva-venta:hover {
+            background: #219a52 !important;
+            border-color: #219a52 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .btn-ver-ventas {
+            background: #3498db !important;
+            border-color: #3498db !important;
+            font-weight: 600 !important;
+            padding: 12px 24px !important;
+            font-size: 1rem !important;
+        }
+        
+        .btn-ver-ventas:hover {
+            background: #2980b9 !important;
+            border-color: #2980b9 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        /* Estilos para autocompletado de productos */
         .autocomplete-suggestions {
             position: absolute;
             z-index: 1001;

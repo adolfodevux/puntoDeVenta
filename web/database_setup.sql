@@ -52,18 +52,21 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS sales (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    cliente_id INT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
     subtotal DECIMAL(10,2) NOT NULL,
     tax_amount DECIMAL(10,2) DEFAULT 0.00,
     discount_amount DECIMAL(10,2) DEFAULT 0.00,
-    payment_method ENUM('cash', 'card', 'transfer') NOT NULL,
+    payment_method ENUM('cash', 'card', 'transfer') NOT NULL DEFAULT 'cash',
     amount_paid DECIMAL(10,2) NOT NULL,
     change_amount DECIMAL(10,2) DEFAULT 0.00,
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
+    status ENUM('pending', 'completed', 'cancelled') DEFAULT 'completed',
     notes TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL,
     INDEX idx_user (user_id),
+    INDEX idx_cliente (cliente_id),
     INDEX idx_date (sale_date),
     INDEX idx_status (status)
 );
@@ -97,6 +100,13 @@ CREATE TABLE IF NOT EXISTS customers (
     INDEX idx_name (name),
     INDEX idx_email (email),
     INDEX idx_document (document_number)
+);
+
+-- Tabla de clientes
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL
 );
 
 -- Insertar categorías de ejemplo
@@ -143,7 +153,50 @@ INSERT INTO users (username, email, password, created_at) VALUES
 ('admin', 'admin@puntod.com', '0192023a7bbd73250516f069df18b500', NOW())
 ON DUPLICATE KEY UPDATE password = '0192023a7bbd73250516f069df18b500';
 
+-- Insertar clientes de ejemplo
+INSERT INTO clientes (nombre, telefono) VALUES 
+('Juan Pérez', '555-1234'),
+('María López', '555-5678'),
+('Carlos Sánchez', '555-8765'),
+('Ana Torres', '555-4321'),
+('Luis Ramírez', '555-2468'),
+('Sofia González', '555-1357'),
+('Miguel Herrera', '555-9642'),
+('Carmen Morales', '555-7531'),
+('Roberto Silva', '555-8642'),
+('Patricia Vargas', '555-9753'),
+('Adolfo Gustavo', '555'),
+('Joje', '124578')
+ON DUPLICATE KEY UPDATE telefono = VALUES(telefono);
+
 -- Insertar cliente genérico
 INSERT INTO customers (name, email, document_type, document_number) VALUES 
 ('Cliente General', 'general@cliente.com', 'dni', '00000000')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
+<<<<<<< HEAD
+=======
+
+-- Verificar que las tablas se crearon correctamente
+DESCRIBE users;
+DESCRIBE categories;
+DESCRIBE products;
+DESCRIBE sales;
+DESCRIBE sale_items;
+DESCRIBE customers;
+DESCRIBE clientes;
+
+-- Mostrar datos de ejemplo
+SELECT 'USUARIOS:' as 'TABLA';
+SELECT id, username, email, is_active, created_at FROM users;
+
+SELECT 'CATEGORÍAS:' as 'TABLA';
+SELECT * FROM categories;
+
+SELECT 'PRODUCTOS:' as 'TABLA';
+SELECT p.id, p.name, p.price, p.stock, c.name as category 
+FROM products p 
+LEFT JOIN categories c ON p.category_id = c.id;
+
+SELECT 'CLIENTES:' as 'TABLA';
+SELECT id, name, email, document_number FROM customers;
+>>>>>>> 337943869766f00d62523a22ba4cf5bf34f34354
