@@ -360,13 +360,145 @@ while ($row = $resCat->fetch_assoc()) {
         }
         /* Modal glassmorphism */
         .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,60,90,0.18); align-items: center; justify-content: center; z-index: 9999; }
-        .modal { background: rgba(255,255,255,0.85); padding: 2.5rem 2rem 2rem 2rem; border-radius: 2rem; min-width: 320px; max-width: 95vw; box-shadow: 0 8px 32px #185a9d33; backdrop-filter: blur(8px); position: relative; }
+        .modal { 
+            background: rgba(255,255,255,0.85); 
+            padding: 2.5rem 2rem 2rem 2rem; 
+            border-radius: 2rem; 
+            min-width: 320px; 
+            max-width: 95vw; 
+            max-height: 90vh;
+            box-shadow: 0 8px 32px #185a9d33; 
+            backdrop-filter: blur(8px); 
+            position: relative;
+            overflow-y: auto;
+        }
         .modal h3 { margin-bottom: 1.5rem; color: #185a9d; font-size: 1.5rem; font-weight: 800; }
-        .modal input, .modal select, .modal textarea { width: 100%; padding: 0.7rem; margin-bottom: 1.2rem; border-radius: 1em; border: 1.5px solid #b2c9e6; font-size: 1.08rem; background: #f8fafc; transition: border 0.18s; }
-        .modal input:focus, .modal select:focus, .modal textarea:focus { border: 1.5px solid #43cea2; outline: none; }
-        .modal .btn { width: 100%; margin-top: 0.7rem; border-radius: 1em; font-size: 1.1rem; }
+        .modal input, .modal select, .modal textarea { 
+            width: 100%; 
+            padding: 0.7rem; 
+            margin-bottom: 1.2rem; 
+            border-radius: 0.3rem; 
+            border: 1.5px solid #b2c9e6; 
+            font-size: 1.08rem; 
+            background: #f8fafc; 
+            transition: border 0.18s; 
+        }
+        .modal input:focus, .modal select:focus, .modal textarea:focus { 
+            border: 1.5px solid #43cea2; 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(67, 206, 162, 0.1);
+        }
+        .modal .btn { width: 100%; margin-top: 0.7rem; border-radius: 0.5rem; font-size: 1.1rem; }
         .close-modal { position: absolute; top: 1.2rem; right: 1.5rem; font-size: 1.7rem; color: #e74c3c; cursor: pointer; font-weight: 700; transition: color 0.18s; }
         .close-modal:hover { color: #c0392b; }
+        
+        /* Form group styling */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        /* Responsive para modal */
+        @media (max-width: 768px) {
+            .modal {
+                margin: 1rem;
+                padding: 1.5rem 1rem 1rem 1rem;
+                max-width: calc(100vw - 2rem);
+                max-height: calc(100vh - 2rem);
+                border-radius: 1rem;
+            }
+            .modal h3 { 
+                font-size: 1.3rem; 
+                margin-bottom: 1rem;
+                text-align: center;
+            }
+            .modal input, .modal select, .modal textarea {
+                font-size: 1rem;
+                padding: 0.6rem;
+                margin-bottom: 1rem;
+            }
+            .close-modal {
+                top: 0.8rem;
+                right: 1rem;
+                font-size: 1.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .modal {
+                margin: 0.5rem;
+                padding: 1rem 0.8rem 0.8rem 0.8rem;
+                max-width: calc(100vw - 1rem);
+                max-height: calc(100vh - 1rem);
+                border-radius: 0.8rem;
+            }
+            .modal h3 { 
+                font-size: 1.1rem; 
+                margin-bottom: 0.8rem;
+            }
+            .modal input, .modal select, .modal textarea {
+                font-size: 0.9rem;
+                padding: 0.5rem;
+                margin-bottom: 0.8rem;
+                border-radius: 0.2rem;
+            }
+            .form-group {
+                margin-bottom: 0.8rem;
+            }
+            .form-group label {
+                font-size: 0.85rem;
+                margin-bottom: 0.3rem;
+            }
+            .modal .btn {
+                font-size: 1rem;
+                padding: 0.7rem;
+                margin-top: 0.5rem;
+            }
+            .close-modal {
+                top: 0.5rem;
+                right: 0.8rem;
+                font-size: 1.3rem;
+            }
+        }
+        @media (max-width: 360px) {
+            .modal {
+                margin: 0.2rem;
+                padding: 0.8rem 0.5rem 0.5rem 0.5rem;
+                max-width: calc(100vw - 0.4rem);
+                max-height: calc(100vh - 0.4rem);
+                border-radius: 0.5rem;
+            }
+            .modal h3 { 
+                font-size: 1rem; 
+                margin-bottom: 0.6rem;
+            }
+            .modal input, .modal select, .modal textarea {
+                font-size: 0.8rem;
+                padding: 0.4rem;
+                margin-bottom: 0.6rem;
+            }
+            .form-group {
+                margin-bottom: 0.6rem;
+            }
+            .form-group label {
+                font-size: 0.8rem;
+                margin-bottom: 0.2rem;
+            }
+            .modal .btn {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+            .close-modal {
+                top: 0.3rem;
+                right: 0.5rem;
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 <body>
