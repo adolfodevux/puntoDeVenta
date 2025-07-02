@@ -1,4 +1,4 @@
-/* Dashboard CSS para Punto-D POS */
+/* Dashboard CSS para Punto-D POS - Updated 2025 */
 * {
     margin: 0;
     padding: 0;
@@ -735,7 +735,7 @@ body {
 
 .cart-item:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
+    border-color: #3498db;
 }
 
 .cart-item-header {
@@ -764,7 +764,7 @@ body {
 
 .cart-item-price {
     display: block;
-    color: #667eea;
+    color: #3498db;
     font-size: 0.85rem;
     font-weight: 500;
 }
@@ -869,7 +869,7 @@ body {
 }
 
 .stock-info i {
-    color: #667eea;
+    color: #3498db;
     font-size: 0.75rem;
 }
 

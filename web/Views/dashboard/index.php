@@ -74,9 +74,9 @@ $currentTime = date('H:i:s');
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" data-module="inventory">
-                           <i class="fas fa-box"></i>
-                            <span>Categorias</span>
+                        <a href="#" data-module="categories">
+                           <i class="fas fa-tags"></i>
+                            <span>Categorías</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -525,7 +525,7 @@ $currentTime = date('H:i:s');
             if (currentHour >= 5 && currentHour < 12) {
                 greeting = 'Buenos días';
                 icon = '🌅';
-                bgGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                bgGradient = 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
                 timeMessage = 'Que tengas un excelente día';
             } else if (currentHour >= 12 && currentHour < 18) {
                 greeting = 'Buenas tardes';
@@ -1551,6 +1551,7 @@ $currentTime = date('H:i:s');
             const moduleMessages = {
                 'pos': '🛒 Módulo Punto de Venta - Ya estás aquí',
                 'sales': '📈 Redirigiendo al módulo de Ventas...',
+                'categories': '🏷️ Redirigiendo al módulo de Categorías...',
             };
             
             if (module === 'customers') {
@@ -1560,6 +1561,11 @@ $currentTime = date('H:i:s');
             
             if (module === 'sales') {
                 window.location.href = '../sales/index.php';
+                return;
+            }
+            
+            if (module === 'categories') {
+                window.location.href = '../categories/manage.php';
                 return;
             }
             

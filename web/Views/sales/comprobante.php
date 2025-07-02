@@ -67,7 +67,7 @@ if ($sale['cliente_nombre'] && $sale['cliente_nombre'] !== 'null') {
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
             padding: 20px;
             text-align: center;
