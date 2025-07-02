@@ -40,15 +40,15 @@ class Category {
     }
 
     public function deleteCategory($id) {
-        // Verificar si la categoría tiene productos asignados
-        $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM products WHERE category_id = ?");
+        // Verificar si la categoría tiene productos activos asignados
+        $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM products WHERE category_id = ? AND is_active = 1");
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
         $count = $result->fetch_assoc()['count'];
         
         if ($count > 0) {
-            throw new Exception("No se puede eliminar la categoría porque tiene productos asignados");
+            throw new Exception("No se puede eliminar la categoría porque tiene productos activos asignados");
         }
         
         $stmt = $this->db->prepare("DELETE FROM categories WHERE id = ?");
@@ -65,7 +65,7 @@ class Category {
                 c.created_at,
                 COUNT(p.id) as product_count
             FROM categories c
-            LEFT JOIN products p ON c.id = p.category_id
+            LEFT JOIN products p ON c.id = p.category_id AND p.is_active = 1
             GROUP BY c.id, c.name, c.description, c.created_at
             ORDER BY c.name ASC
         ";
@@ -88,7 +88,7 @@ class Category {
                 c.created_at,
                 COUNT(p.id) as product_count
             FROM categories c
-            LEFT JOIN products p ON c.id = p.category_id
+            LEFT JOIN products p ON c.id = p.category_id AND p.is_active = 1
             WHERE c.name LIKE ? OR c.description LIKE ?
             GROUP BY c.id, c.name, c.description, c.created_at
             ORDER BY c.name ASC

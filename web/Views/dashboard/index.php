@@ -73,6 +73,12 @@ $currentTime = date('H:i:s');
                             <span>Inventario</span>
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a href="#" data-module="suppliers">
+                            <i class="fas fa-truck"></i>
+                            <span>Proveedores</span>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="#" data-module="categories">
                            <i class="fas fa-tags"></i>
@@ -91,6 +97,7 @@ $currentTime = date('H:i:s');
                             <span>Clientes</span>
                         </a>
                     </li>
+                   
                     
                     <li class="nav-item logout-nav-item">
                         <a href="../auth/logout.php" class="logout-btn quick-logout">
@@ -1556,6 +1563,11 @@ $currentTime = date('H:i:s');
             
             if (module === 'customers') {
                 window.location.href = '../../Views/clientes/index.php';
+                return;
+            }
+            
+            if (module === 'suppliers') {
+                window.location.href = '../suppliers/index.php';
                 return;
             }
             

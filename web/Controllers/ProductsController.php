@@ -1,6 +1,6 @@
 <?php
 // Controlador para manejo de productos
-require_once '../Models/database.php';
+require_once __DIR__ . '/../Models/database.php';
 
 header('Content-Type: application/json');
 
@@ -15,7 +15,11 @@ class ProductsController {
         try {
             $conn = $this->db->getConnection();
             
-            $query = "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 ORDER BY p.name";
+            $query = "SELECT p.*, c.name as category_name, s.name as supplier_name 
+                     FROM products p 
+                     LEFT JOIN categories c ON p.category_id = c.id 
+                     LEFT JOIN suppliers s ON p.supplier_id = s.id 
+                     WHERE p.is_active = 1 ORDER BY p.name";
             $result = $conn->query($query);
             
             if (!$result) {
@@ -66,6 +70,59 @@ class ProductsController {
                 'success' => false,
                 'message' => 'Error al obtener categorías: ' . $e->getMessage()
             ]);
+        }
+    }
+    
+    public function getSuppliers() {
+        try {
+            $conn = $this->db->getConnection();
+            
+            $query = "SELECT * FROM suppliers WHERE is_active = 1 ORDER BY name";
+            $result = $conn->query($query);
+            
+            if (!$result) {
+                throw new Exception('Error al ejecutar consulta');
+            }
+            
+            $suppliers = [];
+            while ($row = $result->fetch_assoc()) {
+                $suppliers[] = $row;
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $suppliers
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al obtener proveedores: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    // Método para uso interno que devuelve el array directamente
+    public function getSuppliersArray() {
+        try {
+            $conn = $this->db->getConnection();
+            
+            $query = "SELECT * FROM suppliers WHERE is_active = 1 ORDER BY name";
+            $result = $conn->query($query);
+            
+            if (!$result) {
+                return [];
+            }
+            
+            $suppliers = [];
+            while ($row = $result->fetch_assoc()) {
+                $suppliers[] = $row;
+            }
+            
+            return $suppliers;
+            
+        } catch (Exception $e) {
+            return [];
         }
     }
     
@@ -179,11 +236,11 @@ class ProductsController {
     }
     
     // AGREGAR PRODUCTO
-    public function addProduct($name, $category_id, $description, $barcode, $stock, $price) {
+    public function addProduct($name, $category_id, $description, $barcode, $stock, $price, $supplier_id = null) {
         try {
             $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("INSERT INTO products (name, category_id, description, barcode, stock, price, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
-            $stmt->bind_param('sissid', $name, $category_id, $description, $barcode, $stock, $price);
+            $stmt = $conn->prepare("INSERT INTO products (name, category_id, description, barcode, stock, price, supplier_id, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->bind_param('sissidi', $name, $category_id, $description, $barcode, $stock, $price, $supplier_id);
             $stmt->execute();
             $stmt->close();
             echo json_encode(['success' => true, 'message' => 'Producto agregado']);
@@ -192,11 +249,11 @@ class ProductsController {
         }
     }
     // EDITAR PRODUCTO
-    public function editProduct($id, $name, $category_id, $description, $barcode, $stock, $price) {
+    public function editProduct($id, $name, $category_id, $description, $barcode, $stock, $price, $supplier_id = null) {
         try {
             $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("UPDATE products SET name=?, category_id=?, description=?, barcode=?, stock=?, price=? WHERE id=?");
-            $stmt->bind_param('sissidi', $name, $category_id, $description, $barcode, $stock, $price, $id);
+            $stmt = $conn->prepare("UPDATE products SET name=?, category_id=?, description=?, barcode=?, stock=?, price=?, supplier_id=? WHERE id=?");
+            $stmt->bind_param('sissidii', $name, $category_id, $description, $barcode, $stock, $price, $supplier_id, $id);
             $stmt->execute();
             $stmt->close();
             echo json_encode(['success' => true, 'message' => 'Producto actualizado']);
@@ -233,6 +290,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             case 'categories':
                 $controller->getCategories();
                 break;
+            case 'suppliers':
+                $controller->getSuppliers();
+                break;
             case 'search':
                 if (isset($_GET['q'])) {
                     $controller->searchProducts($_GET['q']);
@@ -266,7 +326,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $input['description'],
                     $input['barcode'],
                     $input['stock'],
-                    $input['price']
+                    $input['price'],
+                    $input['supplier_id'] ?? null
                 );
                 break;
             case 'edit':
@@ -277,7 +338,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $input['description'],
                     $input['barcode'],
                     $input['stock'],
-                    $input['price']
+                    $input['price'],
+                    $input['supplier_id'] ?? null
                 );
                 break;
             case 'delete':

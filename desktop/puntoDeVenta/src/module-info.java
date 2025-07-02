@@ -1,10 +1,8 @@
 /**
- * 
+ * Módulo del Sistema de Punto de Venta
  */
-/**
- * 
- */
-module inventario {
-	requires java.desktop;
-	requires java.sql;
+module puntoDeVenta {
+    requires java.sql;
+    requires java.desktop;
+    requires java.base;
 }

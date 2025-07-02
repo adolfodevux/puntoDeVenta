@@ -2,15 +2,32 @@
 require_once '../../../Models/database.php';
 $db = Database::getInstance()->getConnection();
 $productos = [];
-$sql = "SELECT p.*, c.name as categoria FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 ORDER BY p.name";
+$sql = "SELECT p.*, c.name as categoria, s.name as proveedor 
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.id 
+        LEFT JOIN suppliers s ON p.supplier_id = s.id 
+        WHERE p.is_active = 1 ORDER BY p.name";
 $res = $db->query($sql);
-while ($row = $res->fetch_assoc()) {
-    $productos[] = $row;
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $productos[] = $row;
+    }
 }
+
 $categorias = [];
 $resCat = $db->query("SELECT * FROM categories WHERE is_active = 1 ORDER BY name");
-while ($row = $resCat->fetch_assoc()) {
-    $categorias[] = $row;
+if ($resCat) {
+    while ($row = $resCat->fetch_assoc()) {
+        $categorias[] = $row;
+    }
+}
+
+$proveedores = [];
+$resProv = $db->query("SELECT * FROM suppliers WHERE is_active = 1 ORDER BY name");
+if ($resProv) {
+    while ($row = $resProv->fetch_assoc()) {
+        $proveedores[] = $row;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -522,6 +539,7 @@ while ($row = $resCat->fetch_assoc()) {
                 <tr>
                     <th>Nombre</th>
                     <th>Categoría</th>
+                    <th>Proveedor</th>
                     <th>Descripción</th>
                     <th>Código de Barras</th>
                     <th>Stock</th>
@@ -557,6 +575,15 @@ while ($row = $resCat->fetch_assoc()) {
                 </select>
             </div>
             <div class="form-group">
+                <label>Proveedor</label>
+                <select name="supplier_id" id="prodSupplier">
+                    <option value="">Selecciona un proveedor (opcional)</option>
+                    <?php foreach($proveedores as $prov): ?>
+                    <option value="<?= $prov['id'] ?>"><?= htmlspecialchars($prov['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Descripción</label>
                 <textarea name="description" id="prodDescription" rows="2" placeholder="Descripción del producto"></textarea>
             </div>
@@ -586,7 +613,7 @@ function renderProductosPage(page, dataOverride) {
     const tbody = document.getElementById('productosTbody');
     const data = dataOverride || productosData;
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan='7' style='text-align:center;color:#888;font-size:1.2rem;padding:2rem;'>No hay productos en inventario</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan='8' style='text-align:center;color:#888;font-size:1.2rem;padding:2rem;'>No hay productos en inventario</td></tr>`;
         document.getElementById('paginationNav').innerHTML = '';
         return;
     }
@@ -603,12 +630,13 @@ function renderProductosPage(page, dataOverride) {
         <tr data-id="${prod.id}">
             <td>${name}</td>
             <td>${prod.categoria || ''}</td>
+            <td>${prod.proveedor || '<span style="color:#bbb;">Sin proveedor</span>'}</td>
             <td>${desc}</td>
             <td>${barcode}</td>
             <td><span class='badge-stock'><i class='fa fa-box'></i> ${prod.stock}</span></td>
             <td><span class='badge-price'><i class='fa fa-dollar-sign'></i> $${parseFloat(prod.price).toFixed(2)}</span></td>
             <td>
-                <button class='btn-edit' title='Editar' onclick="openEditModal(${prod.id}, '${name}', ${prod.category_id}, '${desc}', '${barcode}', ${prod.stock}, ${prod.price})"><i class='fa-solid fa-pen-to-square'></i></button>
+                <button class='btn-edit' title='Editar' onclick="openEditModal(${prod.id}, '${name}', ${prod.category_id}, '${desc}', '${barcode}', ${prod.stock}, ${prod.price}, ${prod.supplier_id || 'null'})"><i class='fa-solid fa-pen-to-square'></i></button>
                 <button class='btn-delete' title='Eliminar' onclick='deleteProduct(${prod.id})'><i class='fa-solid fa-trash'></i></button>
             </td>
         </tr>
@@ -665,11 +693,12 @@ function generarBarcode() {
     for(let i=0; i<13; i++) code += Math.floor(Math.random()*10);
     return code;
 }
-function openEditModal(id, name, category_id, description, barcode, stock, price) {
+function openEditModal(id, name, category_id, description, barcode, stock, price, supplier_id) {
     document.getElementById('modalTitle').innerText = 'Editar Producto';
     document.getElementById('prodId').value = id;
     document.getElementById('prodName').value = name;
     document.getElementById('prodCategory').value = category_id;
+    document.getElementById('prodSupplier').value = supplier_id || '';
     document.getElementById('prodDescription').value = description;
     document.getElementById('prodBarcode').value = barcode;
     document.getElementById('prodStock').value = stock;
@@ -701,12 +730,13 @@ if (productForm) {
         const id = document.getElementById('prodId').value;
         const name = document.getElementById('prodName').value.trim();
         const category_id = document.getElementById('prodCategory').value;
+        const supplier_id = document.getElementById('prodSupplier').value || null;
         const description = document.getElementById('prodDescription').value.trim();
         const barcode = document.getElementById('prodBarcode').value.trim();
         const stock = document.getElementById('prodStock').value;
         const price = document.getElementById('prodPrice').value;
         let action = id ? 'edit' : 'add';
-        const payload = { action, id, name, category_id, description, barcode, stock, price };
+        const payload = { action, id, name, category_id, supplier_id, description, barcode, stock, price };
         try {
             const res = await fetch('../../../Controllers/ProductsController.php', {
                 method: 'POST',
