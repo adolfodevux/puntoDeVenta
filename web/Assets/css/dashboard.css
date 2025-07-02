@@ -560,14 +560,16 @@ body {
 }
 
 .stock-badge.low-stock {
-    color: #dc3545;
-    background: #fef2f2;
-    border-color: #fecaca;
+    color: #ffffff;
+    background: #e74c3c;
+    border-color: #c0392b;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
     animation: stockWarningPulse 2s ease-in-out infinite;
 }
 
 .stock-badge.low-stock i {
-    color: #dc3545;
+    color: #ffffff;
     font-size: 0.9rem;
     margin-left: 0.2rem;
     animation: warningShake 0.8s ease-in-out infinite;
@@ -575,12 +577,14 @@ body {
 
 @keyframes stockWarningPulse {
     0%, 100% { 
-        background: #fef2f2; 
-        border-color: #fecaca; 
+        background: #e74c3c; 
+        border-color: #c0392b;
+        box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
     }
     50% { 
-        background: #fee2e2; 
-        border-color: #fca5a5; 
+        background: #c0392b; 
+        border-color: #a93226;
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.5);
     }
 }
 
