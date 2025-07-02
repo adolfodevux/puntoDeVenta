@@ -3,19 +3,79 @@
 require_once '../Models/database.php';
 require_once '../Models/Sales.php';
 
-header('Content-Type: application/json');
-
 class SalesController {
     private $db;
     private $salesModel;
     
     public function __construct() {
         $this->db = Database::getInstance();
-        $database = new Database();
-        $this->salesModel = new Sales($database->getConnection());
+        $this->salesModel = new Sales();
     }
     
+    public function index() {
+        // Parámetros de paginación
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $limit = 10;
+        
+        // Filtros (solo fecha, ya que solo hay efectivo)
+        $paymentMethodFilter = ''; // Solo efectivo
+        $dateFilter = $_GET['date'] ?? '';
+        
+        // Obtener ventas con paginación y filtros
+        $sales = $this->salesModel->getAllSalesWithPagination($page, $limit, $paymentMethodFilter, $dateFilter);
+        $totalSales = $this->salesModel->getTotalSalesCount($paymentMethodFilter, $dateFilter);
+        $totalPages = ceil($totalSales / $limit);
+        
+        // Estadísticas
+        $stats = $this->salesModel->getSalesStats();
+        
+        include __DIR__ . '/../Views/sales/index.php';
+    }
+    
+    public function getStats() {
+        header('Content-Type: application/json');
+        $stats = $this->salesModel->getSalesStats();
+        echo json_encode(['success' => true, 'data' => $stats]);
+    }
+    
+    public function filter() {
+        // Redirigir a index con los parámetros GET (solo fecha)
+        $params = [];
+        
+        if (isset($_GET['date']) && !empty($_GET['date'])) {
+            $params['date'] = $_GET['date'];
+        }
+        
+        if (isset($_GET['page'])) {
+            $params['page'] = $_GET['page'];
+        }
+        
+        $queryString = http_build_query($params);
+        header('Location: ?action=sales&' . $queryString);
+        exit;
+    }
+    
+    public function details() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: ?action=sales');
+            exit;
+        }
+        
+        $sale = $this->salesModel->getSaleDetails($id);
+        if (!$sale) {
+            header('Location: ?action=sales');
+            exit;
+        }
+        
+        include __DIR__ . '/../Views/sales/details.php';
+    }
+    
+    // Método delete eliminado - Las ventas no se deben eliminar por cuestiones de auditoría
+    
     public function processSale() {
+        header('Content-Type: application/json');
+        
         try {
             // Obtener datos de la venta del POST
             $input = json_decode(file_get_contents('php://input'), true);
@@ -37,12 +97,15 @@ class SalesController {
             
             try {
                 // Insertar venta principal
-                $saleQuery = "INSERT INTO sales (user_id, total_amount, subtotal, tax_amount, payment_method, amount_paid, change_amount, sale_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 'completed')";
+                $saleQuery = "INSERT INTO sales (user_id, cliente_id, total_amount, subtotal, tax_amount, payment_method, amount_paid, change_amount, sale_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'completed')";
                 $saleStmt = $conn->prepare($saleQuery);
                 
                 $userId = $_SESSION['user_id'] ?? 1; // Usar ID de sesión o 1 por defecto
-                $saleStmt->bind_param('idddsdd', 
+                $clienteId = !empty($input['clienteId']) ? $input['clienteId'] : null;
+                
+                $saleStmt->bind_param('iidddsdd', 
                     $userId,
+                    $clienteId,
                     $input['total'],
                     $input['subtotal'],
                     $input['tax'],
@@ -52,50 +115,51 @@ class SalesController {
                 );
                 
                 if (!$saleStmt->execute()) {
-                    throw new Exception('Error al insertar venta');
+                    throw new Exception('Error al insertar venta: ' . $saleStmt->error);
                 }
                 
                 $saleId = $conn->insert_id;
-                $saleStmt->close();
                 
                 // Insertar items de la venta
                 $itemQuery = "INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?)";
                 $itemStmt = $conn->prepare($itemQuery);
                 
                 foreach ($input['items'] as $item) {
-                    $totalPrice = $item['price'] * $item['quantity'];
                     $itemStmt->bind_param('iisidd',
                         $saleId,
                         $item['id'],
                         $item['name'],
                         $item['quantity'],
                         $item['price'],
-                        $totalPrice
+                        $item['quantity'] * $item['price']
                     );
                     
                     if (!$itemStmt->execute()) {
-                        throw new Exception('Error al insertar item de venta');
+                        throw new Exception('Error al insertar item de venta: ' . $itemStmt->error);
+                    }
+                    
+                    // Actualizar stock del producto
+                    $updateStockQuery = "UPDATE products SET stock = stock - ? WHERE id = ?";
+                    $updateStockStmt = $conn->prepare($updateStockQuery);
+                    $updateStockStmt->bind_param('ii', $item['quantity'], $item['id']);
+                    
+                    if (!$updateStockStmt->execute()) {
+                        throw new Exception('Error al actualizar stock: ' . $updateStockStmt->error);
                     }
                 }
                 
-                $itemStmt->close();
-                
                 // Confirmar transacción
                 $conn->commit();
-                $conn->autocommit(true);
                 
-                // Respuesta exitosa
                 echo json_encode([
                     'success' => true,
                     'message' => 'Venta procesada exitosamente',
-                    'sale_id' => $saleId,
-                    'data' => $input
+                    'saleId' => $saleId
                 ]);
                 
             } catch (Exception $e) {
-                // Revertir transacción en caso de error
+                // Rollback en caso de error
                 $conn->rollback();
-                $conn->autocommit(true);
                 throw $e;
             }
             
@@ -106,140 +170,33 @@ class SalesController {
             ]);
         }
     }
-    
-    public function getSales() {
-        try {
-            $conn = $this->db->getConnection();
-            
-            $query = "SELECT s.*, u.username FROM sales s LEFT JOIN users u ON s.user_id = u.id ORDER BY s.sale_date DESC LIMIT 50";
-            $result = $conn->query($query);
-            
-            if (!$result) {
-                throw new Exception('Error al ejecutar consulta');
-            }
-            
-            $sales = [];
-            while ($row = $result->fetch_assoc()) {
-                $sales[] = $row;
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $sales
-            ]);
-            
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al obtener ventas: ' . $e->getMessage()
-            ]);
-        }
-    }
-    
-    public function getSaleDetails($saleId) {
-        try {
-            $conn = $this->db->getConnection();
-            
-            // Obtener datos de la venta
-            $saleQuery = "SELECT s.*, u.username FROM sales s LEFT JOIN users u ON s.user_id = u.id WHERE s.id = ?";
-            $saleStmt = $conn->prepare($saleQuery);
-            $saleStmt->bind_param('i', $saleId);
-            $saleStmt->execute();
-            $saleResult = $saleStmt->get_result();
-            $sale = $saleResult->fetch_assoc();
-            $saleStmt->close();
-            
-            if (!$sale) {
-                throw new Exception('Venta no encontrada');
-            }
-            
-            // Obtener items de la venta
-            $itemsQuery = "SELECT * FROM sale_items WHERE sale_id = ?";
-            $itemsStmt = $conn->prepare($itemsQuery);
-            $itemsStmt->bind_param('i', $saleId);
-            $itemsStmt->execute();
-            $itemsResult = $itemsStmt->get_result();
-            
-            $items = [];
-            while ($row = $itemsResult->fetch_assoc()) {
-                $items[] = $row;
-            }
-            $itemsStmt->close();
-            
-            $sale['items'] = $items;
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $sale
-            ]);
-            
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al obtener detalles de venta: ' . $e->getMessage()
-            ]);
-        }
-    }
-    
-    public function index() {
-        $sales = $this->salesModel->getAllSales();
-        if (empty($sales)) {
-            include '../Views/dashboard/no_sales.php';
-        } else {
-            include '../Views/dashboard/sales.php';
-        }
-    }
-
-    public function create($data) {
-        $result = $this->salesModel->addSale($data);
-        if ($result) {
-            header('Location: /dashboard/sales');
-        } else {
-            echo "Error creating sale.";
-        }
-    }
-
-    public function delete($id) {
-        $result = $this->salesModel->deleteSale($id);
-        if ($result) {
-            header('Location: /dashboard/sales');
-        } else {
-            echo "Error deleting sale.";
-        }
-    }
 }
 
-// Manejo de rutas
-session_start();
-
+// Manejo de rutas básico
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    session_start();
     $controller = new SalesController();
     $controller->processSale();
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    session_start();
+    $action = $_GET['action'] ?? 'index';
     $controller = new SalesController();
     
-    if (isset($_GET['action'])) {
-        switch ($_GET['action']) {
-            case 'list':
-                $controller->getSales();
-                break;
-            case 'details':
-                if (isset($_GET['id'])) {
-                    $controller->getSaleDetails($_GET['id']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'ID de venta requerido']);
-                }
-                break;
-            default:
-                echo json_encode(['success' => false, 'message' => 'Acción no válida']);
-        }
-    } else {
-        $controller->getSales();
+    switch ($action) {
+        case 'stats':
+            $controller->getStats();
+            break;
+        case 'filter':
+            $controller->filter();
+            break;
+        case 'details':
+            $controller->details();
+            break;
+        case 'sales':
+        case 'index':
+        default:
+            $controller->index();
+            break;
     }
-} else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Método no permitido'
-    ]);
 }
 ?>

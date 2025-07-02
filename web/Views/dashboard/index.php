@@ -1465,7 +1465,7 @@ $currentTime = date('H:i:s');
                         html: `
                             <div style="text-align: center; padding: 1rem;">
                                 <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-                                <h3 style="color: #27ae60; margin-bottom: 1rem;">Venta #${data.sale_id}</h3>
+                                <h3 style="color: #27ae60; margin-bottom: 1rem;">Venta #${data.saleId}</h3>
                                 <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
                                     <p style="margin: 0.5rem 0;"><strong>Total:</strong> $${data.total.toFixed(2)}</p>
                                     <p style="margin: 0.5rem 0;"><strong>Cliente:</strong> ${data.cliente_nombre || 'Sin cliente'}</p>
@@ -1476,15 +1476,19 @@ $currentTime = date('H:i:s');
                             </div>
                         `,
                         icon: 'success',
+                        showDenyButton: true,
                         showCancelButton: true,
                         confirmButtonText: '🛒 Nueva Venta',
+                        denyButtonText: '🧾 Ver Comprobante',
                         cancelButtonText: '📊 Ver Ventas',
                         confirmButtonColor: '#27ae60',
+                        denyButtonColor: '#f39c12',
                         cancelButtonColor: '#3498db',
                         reverseButtons: true,
                         allowOutsideClick: false,
                         customClass: {
                             confirmButton: 'btn-nueva-venta',
+                            denyButton: 'btn-comprobante',
                             cancelButton: 'btn-ver-ventas'
                         }
                     }).then((result) => {
@@ -1494,11 +1498,32 @@ $currentTime = date('H:i:s');
                             setTimeout(() => {
                                 window.location.reload();
                             }, 1000);
+                        } else if (result.isDenied) {
+                            // Ver comprobante - abrir en nueva ventana
+                            window.open('../sales/comprobante.php?id=' + data.saleId, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
+                            // Luego preguntar qué hacer
+                            setTimeout(() => {
+                                Swal.fire({
+                                    title: '¿Qué deseas hacer ahora?',
+                                    showCancelButton: true,
+                                    confirmButtonText: '🛒 Nueva Venta',
+                                    cancelButtonText: '📊 Ver Ventas',
+                                    confirmButtonColor: '#27ae60',
+                                    cancelButtonColor: '#3498db'
+                                }).then((result2) => {
+                                    if (result2.isConfirmed) {
+                                        window.location.reload();
+                                    } else {
+                                        window.location.href = '../sales/index.php';
+                                    }
+                                });
+                            }, 500);
                         } else if (result.dismiss === Swal.DismissReason.cancel) {
-                            // Ver ventas - redirigir o mostrar módulo de ventas
-                            showInfo('📊 Módulo de ventas próximamente disponible');
-                            // Aquí puedes agregar la redirección cuando tengas el módulo de ventas
-                            // window.location.href = '../ventas/index.php';
+                            // Ver ventas - redirigir al módulo de ventas
+                            showSuccessToast('📊 Redirigiendo a ventas...');
+                            setTimeout(() => {
+                                window.location.href = '../sales/index.php';
+                            }, 1000);
                         }
                     });
                     
@@ -1525,12 +1550,16 @@ $currentTime = date('H:i:s');
             // Funcionalidad básica de módulos
             const moduleMessages = {
                 'pos': '🛒 Módulo Punto de Venta - Ya estás aquí',
-                'sales': '📈 Módulo Ventas - Funcionalidad futura',
-            
+                'sales': '📈 Redirigiendo al módulo de Ventas...',
             };
             
             if (module === 'customers') {
                 window.location.href = '../../Views/clientes/index.php';
+                return;
+            }
+            
+            if (module === 'sales') {
+                window.location.href = '../sales/index.php';
                 return;
             }
             

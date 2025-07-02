@@ -61,17 +61,25 @@ if (isset($_GET['eliminar'])) {
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
 }
-// Obtener clientes de la base de datos
+// Obtener clientes de la base de datos con información de ventas
 $clientes = [];
-$result = $db->query('SELECT * FROM clientes ORDER BY id ASC');
+$sql = "
+    SELECT 
+        c.id,
+        c.nombre,
+        c.telefono,
+        COALESCE(COUNT(s.id), 0) as total_compras,
+        COALESCE(SUM(s.total_amount), 0) as monto_total_compras,
+        MAX(s.sale_date) as ultima_compra
+    FROM clientes c 
+    LEFT JOIN sales s ON c.id = s.cliente_id 
+    GROUP BY c.id, c.nombre, c.telefono
+    ORDER BY c.id ASC
+";
+$result = $db->query($sql);
 while ($row = $result->fetch_assoc()) {
     $clientes[] = $row;
 }
-// Inicializar compras de clientes si no existe
-if (!isset($_SESSION['compras_clientes'])) {
-    $_SESSION['compras_clientes'] = [];
-}
-$compras_clientes = $_SESSION['compras_clientes'];
 // Paginación
 $porPagina = 10;
 $totalClientes = count($clientes);
@@ -264,6 +272,64 @@ if (isset($_GET['editar'])) {
             color: #fff;
             pointer-events: none;
         }
+        /* Estilos para información de compras */
+        .compras-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .compras-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .compras-badge.has-purchases {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+        }
+        
+        .compras-badge.no-purchases {
+            background: linear-gradient(135deg, #95a5a6, #bdc3c7);
+            color: #fff;
+        }
+        
+        .compras-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        
+        .compras-details small {
+            display: block;
+            line-height: 1.2;
+        }
+        
+        /* Responsive para móvil */
+        @media (max-width: 768px) {
+            .compras-badge {
+                min-width: 1.8rem;
+                height: 1.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .compras-details {
+                font-size: 0.7rem;
+            }
+        }
         @media (max-width: 700px) {
             .clientes-container {
                 padding: 12px 4px;
@@ -335,19 +401,22 @@ if (isset($_GET['editar'])) {
                     <td><?= htmlspecialchars($cliente['nombre']) ?></td>
                     <td><?= htmlspecialchars($cliente['telefono']) ?></td>
                     <td>
-                        <?php $numCompras = isset($compras_clientes[$cliente['id']]) ? count($compras_clientes[$cliente['id']]) : 0; ?>
-                        <a href="#" class="ver-compras" data-id="<?= $cliente['id'] ?>">
-                            <?= $numCompras ?>
-                        </a>
-                        <div class="detalle-compras" id="detalle-<?= $cliente['id'] ?>" style="display:none;background:#fafdff;border:1px solid #b2c9e6;padding:10px 14px;border-radius:7px;margin-top:6px;max-width:320px;">
+                        <?php 
+                        $numCompras = intval($cliente['total_compras']);
+                        $montoTotal = floatval($cliente['monto_total_compras']);
+                        $ultimaCompra = $cliente['ultima_compra'];
+                        ?>
+                        <div class="compras-info">
+                            <span class="compras-badge <?= $numCompras > 0 ? 'has-purchases' : 'no-purchases' ?>">
+                                <?= $numCompras ?>
+                            </span>
                             <?php if ($numCompras > 0): ?>
-                                <ul style="margin:0;padding-left:18px;">
-                                <?php foreach ($compras_clientes[$cliente['id']] as $i => $compra): ?>
-                                    <li>Compra #<?= $i+1 ?>: <?= htmlspecialchars(json_encode($compra, JSON_UNESCAPED_UNICODE)) ?></li>
-                                <?php endforeach; ?>
-                                </ul>
-                            <?php else: ?>
-                                <em>Sin compras</em>
+                                <div class="compras-details">
+                                    <small>Total: $<?= number_format($montoTotal, 2) ?></small>
+                                    <?php if ($ultimaCompra): ?>
+                                        <small>Última: <?= date('d/m/Y', strtotime($ultimaCompra)) ?></small>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </td>
@@ -372,25 +441,8 @@ if (isset($_GET['editar'])) {
         <?php endif; ?>
     </div>
     <script>
-    // Mostrar/ocultar detalle de compras al hacer click
-    document.querySelectorAll('.ver-compras').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const id = this.getAttribute('data-id');
-            const detalle = document.getElementById('detalle-' + id);
-            if (detalle) {
-                detalle.style.display = (detalle.style.display === 'block') ? 'none' : 'block';
-            }
-        });
-    });
-    // Ocultar el detalle si se hace click fuera
-    window.addEventListener('click', function(e) {
-        document.querySelectorAll('.detalle-compras').forEach(det => {
-            if (!e.target.classList.contains('ver-compras') && !det.contains(e.target)) {
-                det.style.display = 'none';
-            }
-        });
-    });
+    // JavaScript para funcionalidades adicionales si es necesario
+    console.log('Gestión de clientes cargada - Información de ventas integrada');
     </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ class ClientesController {
         $this->clienteModel = new Cliente();
     }
     public function index() {
-        $clientes = $this->clienteModel->obtenerTodos();
+        $clientes = $this->clienteModel->obtenerTodosConVentas();
         include __DIR__ . '/../Views/clientes/index.php';
     }
     public function crear() {
