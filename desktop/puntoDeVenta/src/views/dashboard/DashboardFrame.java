@@ -41,8 +41,6 @@ public class DashboardFrame extends JFrame {
     // Datos y lógica
     private String currentModule = "pos";
     private List<Product> products;
-    private List<Category> categories;
-    private List<Cliente> clientes;
     private CartManager cartManager;
     private Cliente selectedCliente;
     
@@ -124,7 +122,8 @@ public class DashboardFrame extends JFrame {
     
     private void loadCategories() {
         try {
-            categories = Category.getAllCategories();
+            // Las categorías se cargan directamente cuando se necesitan
+            Category.getAllCategories();
         } catch (Exception e) {
             UIUtils.showErrorMessage(this, "Error al cargar categorías: " + e.getMessage());
         }
@@ -132,7 +131,8 @@ public class DashboardFrame extends JFrame {
     
     private void loadClientes() {
         try {
-            clientes = Cliente.obtenerTodos();
+            // Los clientes se cargan directamente cuando se necesitan
+            Cliente.obtenerTodos();
         } catch (Exception e) {
             UIUtils.showErrorMessage(this, "Error al cargar clientes: " + e.getMessage());
         }
@@ -943,14 +943,6 @@ public class DashboardFrame extends JFrame {
         
         // Actualizar cambio
         updateChangeDisplay();
-    }
-    
-    /**
-     * Método para efectos visuales del carrito (actualmente deshabilitado)
-     */
-    private void animateCartUpdate() {
-        // Efecto visual deshabilitado por solicitud del usuario
-        // El carrito se actualiza sin efectos visuales adicionales
     }
     
     private void updateChangeDisplay() {

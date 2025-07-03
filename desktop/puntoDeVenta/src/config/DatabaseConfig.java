@@ -29,10 +29,24 @@ public class DatabaseConfig {
      */
     public static Connection getConnection() throws SQLException {
         try {
+            System.out.println("Intentando conectar a la base de datos...");
+            System.out.println("URL: " + DB_URL);
+            System.out.println("Usuario: " + DB_USER);
+            
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            
+            System.out.println("✓ Conexión exitosa a la base de datos");
+            return conn;
+            
         } catch (ClassNotFoundException e) {
+            System.err.println("✗ Driver MySQL no encontrado: " + e.getMessage());
             throw new SQLException("Driver MySQL no encontrado", e);
+        } catch (SQLException e) {
+            System.err.println("✗ Error de conexión a la base de datos: " + e.getMessage());
+            System.err.println("Código de error: " + e.getErrorCode());
+            System.err.println("Estado SQL: " + e.getSQLState());
+            throw e;
         }
     }
 }
