@@ -1,5 +1,3 @@
-package main;
-
 import views.auth.LoginFrame;
 import javax.swing.*;
 
@@ -9,18 +7,6 @@ import javax.swing.*;
  */
 public class Main {
     public static void main(String[] args) {
-        // Configurar Look and Feel del sistema
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("No se pudo establecer el Look and Feel del sistema: " + e.getMessage());
-        }
-        
         // Configurar propiedades del sistema para mejor renderizado
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
