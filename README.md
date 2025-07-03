@@ -1,2 +1,4 @@
 # Proyecto Punto de Venta
-# Terminado
+# Web Terminada
+# Apk Terminado
+# Desktop en proceso
