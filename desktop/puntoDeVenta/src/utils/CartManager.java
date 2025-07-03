@@ -87,15 +87,6 @@ public class CartManager {
         return new ArrayList<>(items);
     }
     
-    public int getProductQuantityInCart(int productId) {
-        for (CartItem item : items) {
-            if (item.getProductId() == productId) {
-                return item.getQuantity();
-            }
-        }
-        return 0;
-    }
-    
     // Clase para representar un item del carrito
     public static class CartItem {
         private int productId;

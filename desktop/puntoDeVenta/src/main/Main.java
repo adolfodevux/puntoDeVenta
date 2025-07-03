@@ -1,4 +1,6 @@
-import views.auth.*;
+package main;
+
+import views.auth.LoginFrame;
 import javax.swing.*;
 
 /**
@@ -9,7 +11,12 @@ public class Main {
     public static void main(String[] args) {
         // Configurar Look and Feel del sistema
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
         } catch (Exception e) {
             System.err.println("No se pudo establecer el Look and Feel del sistema: " + e.getMessage());
         }

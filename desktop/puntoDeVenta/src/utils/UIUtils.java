@@ -203,8 +203,49 @@ public class UIUtils {
      */
     public static ImageIcon loadImage(String imagePath, int width, int height) {
         try {
-            // Intentar cargar desde el classpath
-            java.net.URL imageURL = UIUtils.class.getResource("/assets/" + imagePath);
+            java.net.URL imageURL = null;
+            
+            // Primer intento: cargar desde el classpath con /assets/
+            imageURL = UIUtils.class.getResource("/assets/" + imagePath);
+            
+            // Segundo intento: cargar desde el classpath sin /assets/
+            if (imageURL == null) {
+                imageURL = UIUtils.class.getResource("/" + imagePath);
+            }
+            
+            // Tercer intento: cargar desde el ClassLoader
+            if (imageURL == null) {
+                imageURL = UIUtils.class.getClassLoader().getResource("assets/" + imagePath);
+            }
+            
+            // Cuarto intento: cargar desde el ClassLoader sin assets/
+            if (imageURL == null) {
+                imageURL = UIUtils.class.getClassLoader().getResource(imagePath);
+            }
+            
+            // Quinto intento: cargar desde el directorio bin/assets/ directamente
+            if (imageURL == null) {
+                try {
+                    java.io.File imageFile = new java.io.File("bin/assets/" + imagePath);
+                    if (imageFile.exists()) {
+                        imageURL = imageFile.toURI().toURL();
+                    }
+                } catch (Exception fileEx) {
+                    // Continuar con el siguiente intento
+                }
+            }
+            
+            // Sexto intento: cargar desde el directorio src/assets/ directamente
+            if (imageURL == null) {
+                try {
+                    java.io.File imageFile = new java.io.File("src/assets/" + imagePath);
+                    if (imageFile.exists()) {
+                        imageURL = imageFile.toURI().toURL();
+                    }
+                } catch (Exception fileEx) {
+                    // Continuar con el siguiente intento
+                }
+            }
             
             if (imageURL != null) {
                 ImageIcon originalIcon = new ImageIcon(imageURL);
@@ -212,6 +253,7 @@ public class UIUtils {
                 return new ImageIcon(scaledImage);
             } else {
                 System.err.println("No se pudo cargar la imagen: " + imagePath);
+                System.err.println("Ruta actual de trabajo: " + System.getProperty("user.dir"));
                 return null;
             }
         } catch (Exception e) {
