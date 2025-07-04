@@ -80,7 +80,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['user_name'])) {
         
         .redirect-link a {
             color: white;
-            text-decoration: none;
+            Views/dashboard/index.phptext-decoration: none;
             background: rgba(255, 255, 255, 0.2);
             padding: 10px 20px;
             border-radius: 25px;
