@@ -5,12 +5,19 @@ import utils.CartManager;
 import utils.SessionManager;
 import utils.UIUtils;
 import views.auth.LoginFrame;
+import views.sales.SalesFrame;
+import views.inventory.InventoryFrameNew;
+import config.DatabaseConfig;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +37,8 @@ public class DashboardFrame extends JFrame {
     private JTable cartTable;
     private JTextField searchField;
     private JTextField clienteSearchField;
+    private JComboBox<String> clienteComboBox;
+    private JLabel selectedClienteLabel;
     private JTextField amountPaidField;
     private JLabel subtotalLabel;
     private JLabel taxLabel;
@@ -41,8 +50,18 @@ public class DashboardFrame extends JFrame {
     // Datos y lógica
     private String currentModule = "pos";
     private List<Product> products;
+    private List<Product> filteredProducts;
+    private List<Category> categories;
     private CartManager cartManager;
-    private Cliente selectedCliente;
+    private Integer selectedClienteId;
+    private JButton activeCategoryButton;
+    
+    // Paginación
+    private int currentPage = 1;
+    private int productsPerPage = 8;
+    private JLabel pageLabel;
+    private JButton prevPageButton;
+    private JButton nextPageButton;
     
     public DashboardFrame() {
         this.sessionManager = SessionManager.getInstance();
@@ -60,12 +79,29 @@ public class DashboardFrame extends JFrame {
         setupLayout();
         setupEventListeners();
         startClock();
-        loadInitialData();
         
-        // Mostrar mensaje de bienvenida
+        // Cargar solo categorías inicialmente
+        loadCategories();
+        
+        // Mostrar mensaje de bienvenida y cargar productos después
         SwingUtilities.invokeLater(() -> {
-            UIUtils.showSuccessMessage(this, 
-                "¡Bienvenido " + sessionManager.getUsername() + "!");
+            // Mostrar mensaje de bienvenida primero
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                "¡Bienvenido " + sessionManager.getUsername() + "!",
+                "Bienvenida",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE
+            );
+            
+            // Después de que el usuario da OK, cargar los productos
+            if (result == JOptionPane.OK_OPTION || result == JOptionPane.CANCEL_OPTION) {
+                // Cargar productos después de confirmar el mensaje de bienvenida
+                SwingUtilities.invokeLater(() -> {
+                    loadProducts();
+                    refreshCategoriesPanel();
+                });
+            }
         });
     }
     
@@ -102,39 +138,53 @@ public class DashboardFrame extends JFrame {
         createMainContent();
     }
     
-    private void loadInitialData() {
-        // Cargar datos en background para no bloquear la UI
-        SwingUtilities.invokeLater(() -> {
-            loadProducts();
-            loadCategories();
-            loadClientes();
-        });
-    }
-    
     private void loadProducts() {
         try {
+            System.out.println("Cargando productos...");
             products = Product.getAllProducts();
-            updateProductsGrid();
+            System.out.println("Productos cargados: " + (products != null ? products.size() : 0));
+            
+            if (products != null && !products.isEmpty()) {
+                filteredProducts = new ArrayList<>(products); // Inicializar productos filtrados
+                currentPage = 1; // Resetear a la primera página
+                System.out.println("Actualizando grid de productos...");
+                
+                // Forzar actualización en el hilo de la UI
+                SwingUtilities.invokeLater(() -> {
+                    updateProductsGrid();
+                    // Forzar repintado del panel principal
+                    if (productsGridPanel != null) {
+                        productsGridPanel.revalidate();
+                        productsGridPanel.repaint();
+                    }
+                    if (contentPanel != null) {
+                        contentPanel.revalidate();
+                        contentPanel.repaint();
+                    }
+                    repaint(); // Repintar toda la ventana
+                });
+                
+                System.out.println("Grid actualizado correctamente");
+            } else {
+                System.out.println("No se encontraron productos en la base de datos");
+                SwingUtilities.invokeLater(() -> {
+                    updateProductsGrid(); // Esto mostrará el mensaje de "No hay productos"
+                });
+            }
         } catch (Exception e) {
-            UIUtils.showErrorMessage(this, "Error al cargar productos: " + e.getMessage());
+            System.err.println("Error al cargar productos: " + e.getMessage());
+            e.printStackTrace();
+            SwingUtilities.invokeLater(() -> {
+                UIUtils.showErrorMessage(this, "Error al cargar productos: " + e.getMessage());
+            });
         }
     }
     
     private void loadCategories() {
         try {
-            // Las categorías se cargan directamente cuando se necesitan
-            Category.getAllCategories();
+            categories = Category.getAllCategories();
         } catch (Exception e) {
             UIUtils.showErrorMessage(this, "Error al cargar categorías: " + e.getMessage());
-        }
-    }
-    
-    private void loadClientes() {
-        try {
-            // Los clientes se cargan directamente cuando se necesitan
-            Cliente.obtenerTodos();
-        } catch (Exception e) {
-            UIUtils.showErrorMessage(this, "Error al cargar clientes: " + e.getMessage());
         }
     }
     
@@ -377,11 +427,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("Punto de Venta");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel breadcrumbLabel = new JLabel("Dashboard > Punto de Venta");
         breadcrumbLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        breadcrumbLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        breadcrumbLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         leftPanel.add(titleLabel);
         leftPanel.add(Box.createVerticalStrut(5));
@@ -393,7 +443,7 @@ public class DashboardFrame extends JFrame {
         
         dateTimeLabel = new JLabel();
         dateTimeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        dateTimeLabel.setForeground(UIUtils.TEXT_COLOR);
+        dateTimeLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         updateDateTime();
         
         rightPanel.add(dateTimeLabel);
@@ -446,12 +496,12 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("Productos");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         searchField = new JTextField("Buscar productos...");
         searchField.setFont(UIUtils.INPUT_FONT);
         searchField.setPreferredSize(new Dimension(250, 35));
-        searchField.setForeground(UIUtils.TEXT_SECONDARY);
+        searchField.setForeground(Color.DARK_GRAY); // Color gris oscuro para mejor visibilidad
         searchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
             BorderFactory.createEmptyBorder(8, 12, 8, 12)
@@ -462,14 +512,14 @@ public class DashboardFrame extends JFrame {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 if (searchField.getText().equals("Buscar productos...")) {
                     searchField.setText("");
-                    searchField.setForeground(UIUtils.TEXT_COLOR);
+                    searchField.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
                 }
             }
             
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (searchField.getText().isEmpty()) {
                     searchField.setText("Buscar productos...");
-                    searchField.setForeground(UIUtils.TEXT_SECONDARY);
+                    searchField.setForeground(Color.DARK_GRAY); // Color gris oscuro para mejor visibilidad
                 }
             }
         });
@@ -481,7 +531,12 @@ public class DashboardFrame extends JFrame {
                 if (!searchText.equals("Buscar productos...") && !searchText.isEmpty()) {
                     searchProducts(searchText);
                 } else {
-                    updateProductsGrid();
+                    // Si no hay búsqueda, mostrar todos los productos y resetear categoría
+                    if (products != null) {
+                        filteredProducts = new ArrayList<>(products);
+                        currentPage = 1;
+                        updateProductsGrid();
+                    }
                 }
             }
         });
@@ -490,35 +545,24 @@ public class DashboardFrame extends JFrame {
         headerPanel.add(searchField, BorderLayout.EAST);
         
         // Panel de categorías como en la web
-        JPanel categoriesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        categoriesPanel.setBackground(Color.WHITE);
+        JPanel categoriesPanel = createCategoriesPanel();
         
-        // Botón "Todos" activo por defecto
-        JButton todosButton = createCategoryButton("Todos", true);
-        todosButton.addActionListener(e -> {
-            setActiveCategoryButton(todosButton);
-            updateProductsGrid();
-        });
-        categoriesPanel.add(todosButton);
-        
-        // Agregar categorías dinámicamente (se cargarán después)
-        
-        // Grid de productos como en la web
+        // Grid de productos como en la web (sin scroll)
         productsGridPanel = new JPanel();
-        productsGridPanel.setLayout(new GridLayout(0, 5, 15, 15)); // 5 columnas como en la web
+        productsGridPanel.setLayout(new GridLayout(2, 4, 15, 15)); // 2 filas x 4 columnas = 8 productos
         productsGridPanel.setBackground(Color.WHITE);
+        productsGridPanel.setPreferredSize(new Dimension(800, 400)); // Tamaño fijo
         
-        JScrollPane scrollPane = new JScrollPane(productsGridPanel);
-        scrollPane.setBorder(null);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        // Panel de paginación
+        JPanel paginationPanel = createPaginationPanel();
         
-        // Panel central que contiene categorías y productos
+        // Panel central que contiene categorías, productos y paginación
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBackground(Color.WHITE);
         centerPanel.add(categoriesPanel, BorderLayout.NORTH);
         centerPanel.add(Box.createVerticalStrut(15), BorderLayout.CENTER);
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        centerPanel.add(productsGridPanel, BorderLayout.CENTER);
+        centerPanel.add(paginationPanel, BorderLayout.SOUTH);
         
         panel.add(headerPanel, BorderLayout.NORTH);
         panel.add(Box.createVerticalStrut(15), BorderLayout.WEST);
@@ -539,7 +583,7 @@ public class DashboardFrame extends JFrame {
             button.setForeground(Color.WHITE);
         } else {
             button.setBackground(Color.WHITE);
-            button.setForeground(UIUtils.TEXT_COLOR);
+            button.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
             button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
                 BorderFactory.createEmptyBorder(7, 15, 7, 15)
@@ -556,7 +600,7 @@ public class DashboardFrame extends JFrame {
                 if (comp instanceof JButton) {
                     JButton btn = (JButton) comp;
                     btn.setBackground(Color.WHITE);
-                    btn.setForeground(UIUtils.TEXT_COLOR);
+                    btn.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
                     btn.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
                         BorderFactory.createEmptyBorder(7, 15, 7, 15)
@@ -571,38 +615,68 @@ public class DashboardFrame extends JFrame {
     }
     
     private void updateProductsGrid() {
-        if (productsGridPanel == null || products == null) return;
+        if (productsGridPanel == null) return;
+        
+        // Si no hay productos filtrados, usar la lista principal
+        if (filteredProducts == null && products != null) {
+            filteredProducts = new ArrayList<>(products);
+        }
+        
+        // Si aún no hay productos, mostrar mensaje
+        if (filteredProducts == null || filteredProducts.isEmpty()) {
+            productsGridPanel.removeAll();
+            JLabel noProductsLabel = new JLabel("No hay productos disponibles", SwingConstants.CENTER);
+            noProductsLabel.setFont(UIUtils.SUBTITLE_FONT);
+            noProductsLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+            productsGridPanel.add(noProductsLabel);
+            productsGridPanel.revalidate();
+            productsGridPanel.repaint();
+            return;
+        }
         
         productsGridPanel.removeAll();
         
-        for (Product product : products) {
+        // Calcular productos para la página actual
+        int startIndex = (currentPage - 1) * productsPerPage;
+        int endIndex = Math.min(startIndex + productsPerPage, filteredProducts.size());
+        
+        // Mostrar productos de la página actual
+        for (int i = startIndex; i < endIndex; i++) {
+            Product product = filteredProducts.get(i);
             JPanel productCard = createProductCard(product);
             productsGridPanel.add(productCard);
         }
+        
+        // Completar con paneles vacíos si es necesario para mantener el grid de 8
+        int remainingSlots = productsPerPage - (endIndex - startIndex);
+        for (int i = 0; i < remainingSlots; i++) {
+            JPanel emptyPanel = new JPanel();
+            emptyPanel.setBackground(Color.WHITE);
+            productsGridPanel.add(emptyPanel);
+        }
+        
+        // Actualizar controles de paginación
+        updatePaginationControls();
         
         productsGridPanel.revalidate();
         productsGridPanel.repaint();
     }
     
     private void searchProducts(String searchTerm) {
-        List<Product> filteredProducts = Product.searchProducts(searchTerm);
-        
-        productsGridPanel.removeAll();
-        
-        for (Product product : filteredProducts) {
-            JPanel productCard = createProductCard(product);
-            productsGridPanel.add(productCard);
-        }
+        List<Product> searchResults = Product.searchProducts(searchTerm);
+        filteredProducts = new ArrayList<>(searchResults);
+        currentPage = 1; // Resetear a la primera página
+        updateProductsGrid();
         
         if (filteredProducts.isEmpty()) {
+            productsGridPanel.removeAll();
             JLabel noResultsLabel = new JLabel("No se encontraron productos", SwingConstants.CENTER);
             noResultsLabel.setFont(UIUtils.SUBTITLE_FONT);
-            noResultsLabel.setForeground(UIUtils.TEXT_SECONDARY);
+            noResultsLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
             productsGridPanel.add(noResultsLabel);
+            productsGridPanel.revalidate();
+            productsGridPanel.repaint();
         }
-        
-        productsGridPanel.revalidate();
-        productsGridPanel.repaint();
     }
     
     private JPanel createProductCard(Product product) {
@@ -633,7 +707,7 @@ public class DashboardFrame extends JFrame {
         // Nombre del producto
         JLabel nameLabel = new JLabel(product.getName());
         nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        nameLabel.setForeground(UIUtils.TEXT_COLOR);
+        nameLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         // Precio
@@ -648,7 +722,7 @@ public class DashboardFrame extends JFrame {
         
         JLabel stockLabel = new JLabel("Stock: " + product.getStock());
         stockLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-        stockLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        stockLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         if (product.isLowStock()) {
             JLabel warningIcon = new JLabel(" ⚠️");
@@ -713,23 +787,9 @@ public class DashboardFrame extends JFrame {
             return;
         }
         
-        // Agregar producto al carrito
         cartManager.addProduct(product, 1);
-        
-        // Forzar actualización inmediata del carrito
-        SwingUtilities.invokeLater(() -> {
-            // Actualizar el display del carrito
-            updateCartDisplay();
-            
-            // Asegurar que la tabla se repinte completamente
-            if (cartTable != null) {
-                cartTable.revalidate();
-                cartTable.repaint();
-            }
-        });
-        
-        // Mensaje de confirmación
-        UIUtils.showSuccessMessage(this, "✓ " + product.getName() + " agregado al carrito");
+        updateCartDisplay();
+        UIUtils.showSuccessMessage(this, "Producto agregado: " + product.getName());
     }
     
     private JPanel createCartPanel() {
@@ -747,7 +807,7 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("Carrito de Compras");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         clearCartButton = new JButton("🗑️ Limpiar");
         clearCartButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -767,9 +827,6 @@ public class DashboardFrame extends JFrame {
         cartTable.setRowHeight(25);
         cartTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cartTable.setFillsViewportHeight(true);
-        
-        // Configurar event listeners para la tabla del carrito INMEDIATAMENTE después de crearla
-        setupCartTableListeners();
         
         // Configurar renderizado de celdas
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -794,34 +851,111 @@ public class DashboardFrame extends JFrame {
         clientePanel.setBackground(Color.WHITE);
         clientePanel.setBorder(BorderFactory.createTitledBorder("Cliente (Opcional)"));
         
-        clienteSearchField = new JTextField("Buscar cliente...");
+        // Panel horizontal para campo de búsqueda, ComboBox y botón limpiar
+        JPanel clienteInputPanel = new JPanel(new BorderLayout(5, 0));
+        clienteInputPanel.setBackground(Color.WHITE);
+        clienteInputPanel.setMaximumSize(new Dimension(320, 35));
+        
+        clienteSearchField = new JTextField();
         clienteSearchField.setFont(UIUtils.INPUT_FONT);
-        clienteSearchField.setPreferredSize(new Dimension(320, 35));
-        clienteSearchField.setMaximumSize(new Dimension(320, 35));
-        clienteSearchField.setForeground(UIUtils.TEXT_SECONDARY);
+        clienteSearchField.setPreferredSize(new Dimension(150, 35));
+        clienteSearchField.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         clienteSearchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
             BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
         
-        // Placeholder behavior para cliente
-        clienteSearchField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                if (clienteSearchField.getText().equals("Buscar cliente...")) {
-                    clienteSearchField.setText("");
-                    clienteSearchField.setForeground(UIUtils.TEXT_COLOR);
-                }
-            }
+        // ComboBox para seleccionar cliente
+        clienteComboBox = new JComboBox<>();
+        clienteComboBox.setFont(UIUtils.INPUT_FONT);
+        clienteComboBox.setPreferredSize(new Dimension(100, 35));
+        clienteComboBox.setBackground(Color.WHITE);
+        clienteComboBox.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        clienteComboBox.addItem("Sin cliente");
+        clienteComboBox.setSelectedIndex(0);
+        
+        // Botón para limpiar selección de cliente
+        JButton clearClienteButton = new JButton("🗑️");
+        clearClienteButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        clearClienteButton.setPreferredSize(new Dimension(35, 35));
+        clearClienteButton.setBackground(new Color(231, 76, 60));
+        clearClienteButton.setForeground(Color.WHITE);
+        clearClienteButton.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        clearClienteButton.setFocusPainted(false);
+        clearClienteButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        clearClienteButton.setToolTipText("Limpiar cliente seleccionado");
+        
+        // Panel para ComboBox y botón limpiar
+        JPanel comboAndClearPanel = new JPanel(new BorderLayout(2, 0));
+        comboAndClearPanel.setBackground(Color.WHITE);
+        comboAndClearPanel.add(clienteComboBox, BorderLayout.CENTER);
+        comboAndClearPanel.add(clearClienteButton, BorderLayout.EAST);
+        
+        // Añadir elementos al panel horizontal
+        clienteInputPanel.add(clienteSearchField, BorderLayout.CENTER);
+        clienteInputPanel.add(comboAndClearPanel, BorderLayout.EAST);
+        
+        // Listener para búsqueda dinámica de clientes - usando KeyListener en lugar de DocumentListener
+        clienteSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            private Timer searchTimer = new Timer(500, e -> updateClienteComboBox()); // 500ms de retraso
             
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                if (clienteSearchField.getText().isEmpty()) {
-                    clienteSearchField.setText("Buscar cliente...");
-                    clienteSearchField.setForeground(UIUtils.TEXT_SECONDARY);
-                }
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                searchTimer.setRepeats(false);
+                searchTimer.restart();
             }
         });
         
-        clientePanel.add(clienteSearchField);
+        // Listener para selección de cliente
+        clienteComboBox.addActionListener(e -> {
+            Object selectedItem = clienteComboBox.getSelectedItem();
+            if (selectedItem != null && !selectedItem.toString().equals("Sin cliente")) {
+                // Extraer ID del cliente seleccionado
+                String clienteText = selectedItem.toString();
+                if (clienteText.contains(" - ")) {
+                    String[] parts = clienteText.split(" - ");
+                    if (parts.length >= 2) {
+                        try {
+                            selectedClienteId = Integer.parseInt(parts[0]);
+                            selectedClienteLabel.setText("Cliente: " + parts[1] + " (ID: " + selectedClienteId + ")");
+                            selectedClienteLabel.setForeground(new Color(39, 174, 96)); // Verde para indicar selección
+                        } catch (NumberFormatException ex) {
+                            selectedClienteId = null;
+                            selectedClienteLabel.setText("Cliente: Ninguno seleccionado");
+                            selectedClienteLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+                        }
+                    }
+                }
+            } else {
+                // Si selecciona "Sin cliente"
+                selectedClienteId = null;
+                selectedClienteLabel.setText("Cliente: Ninguno seleccionado");
+                selectedClienteLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+            }
+        });
+        
+        // Listener para el botón de limpiar cliente
+        clearClienteButton.addActionListener(e -> {
+            selectedClienteId = null;
+            selectedClienteLabel.setText("Cliente: Ninguno seleccionado");
+            selectedClienteLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+            clienteSearchField.setText("");
+            clienteComboBox.removeAllItems();
+            clienteComboBox.addItem("Sin cliente");
+            clienteComboBox.setSelectedIndex(0);
+        });
+        
+        clientePanel.add(clienteInputPanel);
+        
+        // Etiqueta para mostrar cliente seleccionado
+        selectedClienteLabel = new JLabel("Cliente: Ninguno seleccionado");
+        selectedClienteLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        selectedClienteLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+        selectedClienteLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        selectedClienteLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+        
+        clientePanel.add(Box.createVerticalStrut(5));
+        clientePanel.add(selectedClienteLabel);
         
         // Panel de totales y pago
         JPanel totalsPanel = new JPanel();
@@ -835,26 +969,26 @@ public class DashboardFrame extends JFrame {
         // Labels de totales
         subtotalLabel = new JLabel("Subtotal: $0.00");
         subtotalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        subtotalLabel.setForeground(UIUtils.TEXT_COLOR);
+        subtotalLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         subtotalLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         taxLabel = new JLabel("IVA (16%): $0.00");
         taxLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        taxLabel.setForeground(UIUtils.TEXT_COLOR);
+        taxLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         taxLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         totalLabel = new JLabel("Total: $0.00");
         totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        totalLabel.setForeground(UIUtils.TEXT_COLOR);
+        totalLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         totalLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         // Campo de monto recibido
         JLabel paymentLabel = new JLabel("Monto recibido:");
         paymentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        paymentLabel.setForeground(UIUtils.TEXT_COLOR);
+        paymentLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         paymentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        amountPaidField = new JTextField("0.00");
+        amountPaidField = new JTextField();
         amountPaidField.setFont(UIUtils.INPUT_FONT);
         amountPaidField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         amountPaidField.setBorder(BorderFactory.createCompoundBorder(
@@ -910,130 +1044,91 @@ public class DashboardFrame extends JFrame {
         return mainCartPanel;
     }
     
-    private void updateCartDisplay() {
-        // NO llamar a fireTableDataChanged() aquí para evitar bucle infinito
-        // El listener ya se encarga de esto automáticamente
+    private JPanel createPaginationPanel() {
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        paginationPanel.setBackground(Color.WHITE);
+        paginationPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
         
-        // Asegurar que la tabla se revalide y repinte si existe
-        if (cartTable != null) {
-            cartTable.revalidate();
-            cartTable.repaint();
-        }
+        // Botón anterior
+        prevPageButton = new JButton("← Anterior");
+        prevPageButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        prevPageButton.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
+        prevPageButton.setBackground(Color.WHITE);
+        prevPageButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+            BorderFactory.createEmptyBorder(8, 15, 8, 15)
+        ));
+        prevPageButton.setFocusPainted(false);
+        prevPageButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        prevPageButton.addActionListener(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                updateProductsGrid();
+            }
+        });
         
-        // Actualizar totales solo si los labels existen
-        if (subtotalLabel != null && taxLabel != null && totalLabel != null) {
-            double subtotal = cartManager.getSubtotal();
-            double tax = cartManager.getTax();
-            double total = cartManager.getTotal();
-            
-            subtotalLabel.setText("Subtotal: $" + String.format("%.2f", subtotal));
-            taxLabel.setText("IVA (16%): $" + String.format("%.2f", tax));
-            totalLabel.setText("Total: $" + String.format("%.2f", total));
-            
-            // Forzar repintado de los labels
-            subtotalLabel.repaint();
-            taxLabel.repaint();
-            totalLabel.repaint();
-        }
+        // Label de página actual
+        pageLabel = new JLabel("Página 1 de 1");
+        pageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        pageLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
+        pageLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         
-        // Habilitar/deshabilitar botón de checkout
-        if (checkoutButton != null) {
-            checkoutButton.setEnabled(!cartManager.isEmpty());
-        }
+        // Botón siguiente
+        nextPageButton = new JButton("Siguiente →");
+        nextPageButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        nextPageButton.setForeground(Color.WHITE);
+        nextPageButton.setBackground(new Color(52, 152, 219));
+        nextPageButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        nextPageButton.setFocusPainted(false);
+        nextPageButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nextPageButton.addActionListener(e -> {
+            int totalPages = getTotalPages();
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateProductsGrid();
+            }
+        });
         
-        // Actualizar cambio
-        updateChangeDisplay();
+        paginationPanel.add(prevPageButton);
+        paginationPanel.add(pageLabel);
+        paginationPanel.add(nextPageButton);
+        
+        return paginationPanel;
     }
     
-    private void updateChangeDisplay() {
-        try {
-            double amountPaid = Double.parseDouble(amountPaidField.getText());
-            double total = cartManager.getTotal();
-            double change = amountPaid - total;
-            
-            if (change >= 0) {
-                changeLabel.setText("Cambio: $" + String.format("%.2f", change));
-                changeLabel.setForeground(new Color(39, 174, 96));
-            } else {
-                changeLabel.setText("Falta: $" + String.format("%.2f", Math.abs(change)));
-                changeLabel.setForeground(Color.RED);
-            }
-        } catch (NumberFormatException e) {
-            changeLabel.setText("Cambio: $0.00");
-            changeLabel.setForeground(new Color(39, 174, 96));
+    private void updatePaginationControls() {
+        if (pageLabel == null || prevPageButton == null || nextPageButton == null) return;
+        
+        int totalPages = getTotalPages();
+        
+        // Actualizar label
+        pageLabel.setText("Página " + currentPage + " de " + totalPages);
+        
+        // Actualizar estado de botones
+        prevPageButton.setEnabled(currentPage > 1);
+        nextPageButton.setEnabled(currentPage < totalPages);
+        
+        // Cambiar estilos según estado
+        if (prevPageButton.isEnabled()) {
+            prevPageButton.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
+            prevPageButton.setBackground(Color.WHITE);
+        } else {
+            prevPageButton.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+            prevPageButton.setBackground(new Color(248, 249, 250));
+        }
+        
+        if (nextPageButton.isEnabled()) {
+            nextPageButton.setForeground(Color.WHITE);
+            nextPageButton.setBackground(new Color(52, 152, 219));
+        } else {
+            nextPageButton.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+            nextPageButton.setBackground(new Color(248, 249, 250));
         }
     }
     
-    private void clearCart() {
-        if (cartManager.isEmpty()) {
-            UIUtils.showErrorMessage(this, "El carrito ya está vacío");
-            return;
-        }
-        
-        int option = JOptionPane.showConfirmDialog(
-            this,
-            "¿Está seguro que desea limpiar el carrito?",
-            "Confirmar acción",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-        
-        if (option == JOptionPane.YES_OPTION) {
-            cartManager.clearCart();
-            // updateCartDisplay(); - Se llamará automáticamente por el listener de la tabla
-            
-            // Limpiar campos relacionados
-            amountPaidField.setText("");
-            selectedCliente = null;
-            clienteSearchField.setText("Buscar cliente...");
-            clienteSearchField.setForeground(UIUtils.TEXT_SECONDARY);
-            
-            // Mensaje de confirmación
-            UIUtils.showSuccessMessage(this, "✓ Carrito limpiado correctamente");
-        }
-    }
-    
-    private void processCheckout() {
-        if (cartManager.isEmpty()) {
-            UIUtils.showErrorMessage(this, "El carrito está vacío");
-            return;
-        }
-        
-        try {
-            double amountPaid = Double.parseDouble(amountPaidField.getText());
-            double total = cartManager.getTotal();
-            
-            if (amountPaid < total) {
-                UIUtils.showErrorMessage(this, "El monto recibido es insuficiente");
-                return;
-            }
-            
-            // Crear venta
-            Sale sale = new Sale();
-            sale.setUserId(sessionManager.getUserId());
-            sale.setItems(cartManager.getSaleItems());
-            sale.setAmountPaid(amountPaid);
-            
-            if (selectedCliente != null) {
-                sale.setClienteId(selectedCliente.getId());
-            }
-            
-            // Guardar venta
-            if (sale.save()) {
-                UIUtils.showSuccessMessage(this, "¡Venta procesada exitosamente por $" + String.format("%.2f", total) + "!");
-                
-                // Limpiar carrito y campos
-                clearCart();
-                
-                // Recargar productos para actualizar stock
-                loadProducts();
-            } else {
-                UIUtils.showErrorMessage(this, "Error al procesar la venta");
-            }
-            
-        } catch (NumberFormatException e) {
-            UIUtils.showErrorMessage(this, "Ingrese un monto válido");
-        }
+    private int getTotalPages() {
+        if (filteredProducts == null || filteredProducts.isEmpty()) return 1;
+        return (int) Math.ceil((double) filteredProducts.size() / productsPerPage);
     }
     
     private void setupLayout() {
@@ -1047,31 +1142,8 @@ public class DashboardFrame extends JFrame {
     }
     
     private void setupEventListeners() {
-        // Los listeners del carrito se configuran en setupCartTableListeners() 
-        // después de crear la tabla del carrito
-        
-        System.out.println("✓ Event listeners principales configurados");
-    }
-    
-    /**
-     * Configura los event listeners específicos para la tabla del carrito
-     * Se debe llamar después de crear cartTable
-     */
-    private void setupCartTableListeners() {
-        if (cartTable == null) {
-            System.err.println("Error: cartTable es null al configurar listeners");
-            return;
-        }
-        
-        // Listener para cambios en el modelo de la tabla del carrito
-        cartManager.getTableModel().addTableModelListener(e -> {
-            // Solo actualizar en el EDT y una sola vez por cambio
-            if (!SwingUtilities.isEventDispatchThread()) {
-                SwingUtilities.invokeLater(() -> updateCartDisplay());
-            } else {
-                updateCartDisplay();
-            }
-        });
+        // Listener para cambios en el carrito
+        cartManager.getTableModel().addTableModelListener(e -> updateCartDisplay());
         
         // Listener para doble click en tabla del carrito (eliminar item)
         cartTable.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -1087,17 +1159,33 @@ public class DashboardFrame extends JFrame {
                         );
                         if (option == JOptionPane.YES_OPTION) {
                             cartManager.removeItem(row);
-                            UIUtils.showSuccessMessage(DashboardFrame.this, "✓ Producto eliminado del carrito");
+                            updateCartDisplay();
                         }
                     }
                 }
             }
         });
-        
-        System.out.println("✓ Event listeners del carrito configurados correctamente");
     }
     
     private void switchModule(String module, JButton activeButton) {
+        // Caso especial para Ventas - abrir ventana independiente
+        if ("sales".equals(module)) {
+            SalesFrame.openSalesWindow();
+            return;
+        }
+        
+        // Caso especial para Inventario - abrir ventana independiente
+        if ("inventory".equals(module)) {
+            openInventoryWindow();
+            return;
+        }
+        
+        // Caso especial para Proveedores - abrir ventana independiente
+        if ("providers".equals(module)) {
+            openSuppliersWindow();
+            return;
+        }
+        
         this.currentModule = module;
         
         // Actualizar estilos de botones de navegación
@@ -1166,7 +1254,7 @@ public class DashboardFrame extends JFrame {
             default:
                 JLabel notImplementedLabel = new JLabel("Módulo en desarrollo", SwingConstants.CENTER);
                 notImplementedLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-                notImplementedLabel.setForeground(UIUtils.TEXT_SECONDARY);
+                notImplementedLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
                 contentArea.add(notImplementedLabel, BorderLayout.CENTER);
         }
         
@@ -1179,11 +1267,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("📦 Módulo de Inventario", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel descLabel = new JLabel("Gestión de productos y stock", SwingConstants.CENTER);
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        descLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        descLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -1204,11 +1292,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("🏷️ Módulo de Categorías", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel descLabel = new JLabel("Gestión de categorías de productos", SwingConstants.CENTER);
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        descLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        descLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -1229,11 +1317,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("📊 Módulo de Ventas", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel descLabel = new JLabel("Historial y reportes de ventas", SwingConstants.CENTER);
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        descLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        descLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -1254,11 +1342,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("👥 Módulo de Clientes", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel descLabel = new JLabel("Gestión de clientes registrados", SwingConstants.CENTER);
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        descLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        descLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -1279,11 +1367,11 @@ public class DashboardFrame extends JFrame {
         
         JLabel titleLabel = new JLabel("🚚 Módulo de Proveedores", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(UIUtils.TEXT_COLOR);
+        titleLabel.setForeground(Color.BLACK); // Texto negro para mejor visibilidad
         
         JLabel descLabel = new JLabel("Gestión de proveedores", SwingConstants.CENTER);
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        descLabel.setForeground(UIUtils.TEXT_SECONDARY);
+        descLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
         
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -1295,6 +1383,29 @@ public class DashboardFrame extends JFrame {
         centerPanel.add(Box.createVerticalGlue());
         
         panel.add(centerPanel, BorderLayout.CENTER);
+        
+        // Agregar mouse listener para abrir la ventana de proveedores
+        panel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                openSuppliersWindow();
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                panel.setBackground(new Color(240, 245, 250));
+                centerPanel.setBackground(new Color(240, 245, 250));
+                panel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                panel.setBackground(Color.WHITE);
+                centerPanel.setBackground(Color.WHITE);
+                panel.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+            }
+        });
+        
         return panel;
     }
     
@@ -1337,11 +1448,314 @@ public class DashboardFrame extends JFrame {
         }
     }
     
-    @Override
-    public void dispose() {
-        if (clockTimer != null) {
-            clockTimer.stop();
+    private void updateClienteComboBox() {
+        String searchText = clienteSearchField.getText().trim();
+        
+        // No buscar si el texto está vacío o es muy corto
+        if (searchText.isEmpty() || searchText.length() < 2) {
+            SwingUtilities.invokeLater(() -> {
+                if (clienteComboBox.getItemCount() > 1) {
+                    clienteComboBox.removeAllItems();
+                    clienteComboBox.addItem("Sin cliente");
+                }
+            });
+            return;
         }
-        super.dispose();
+        
+        // Ejecutar búsqueda en un hilo separado para no bloquear la UI
+        new Thread(() -> {
+            try {
+                // Buscar clientes que coincidan con ID o nombre
+                List<Cliente> clientesEncontrados = searchClientes(searchText);
+                
+                // Actualizar ComboBox en el hilo de la UI
+                SwingUtilities.invokeLater(() -> {
+                    clienteComboBox.removeAllItems();
+                    clienteComboBox.addItem("Sin cliente");
+                    
+                    for (Cliente cliente : clientesEncontrados) {
+                        String displayText = cliente.getId() + " - " + cliente.getNombre();
+                        clienteComboBox.addItem(displayText);
+                    }
+                });
+                
+            } catch (Exception e) {
+                System.err.println("Error al actualizar ComboBox de clientes: " + e.getMessage());
+            }
+        }).start();
+    }
+    
+    private List<Cliente> searchClientes(String searchText) {
+        List<Cliente> results = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConfig.getConnection();
+            
+            // Verificar si el texto de búsqueda es un número (búsqueda por ID exacto)
+            boolean isNumeric = searchText.matches("\\d+");
+            String sql;
+            
+            if (isNumeric) {
+                // Búsqueda por ID exacto y nombre con LIKE
+                sql = "SELECT id, nombre, telefono FROM clientes WHERE " +
+                      "id = ? OR nombre LIKE ? ORDER BY " +
+                      "CASE WHEN id = ? THEN 1 ELSE 2 END, nombre LIMIT 10";
+                
+                stmt = conn.prepareStatement(sql);
+                int searchId = Integer.parseInt(searchText);
+                String searchPattern = "%" + searchText + "%";
+                stmt.setInt(1, searchId);
+                stmt.setString(2, searchPattern);
+                stmt.setInt(3, searchId);
+            } else {
+                // Búsqueda solo por nombre con LIKE
+                sql = "SELECT id, nombre, telefono FROM clientes WHERE " +
+                      "nombre LIKE ? ORDER BY nombre LIMIT 10";
+                
+                stmt = conn.prepareStatement(sql);
+                String searchPattern = "%" + searchText + "%";
+                stmt.setString(1, searchPattern);
+            }
+            
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Cliente cliente = new Cliente(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono")
+                );
+                results.add(cliente);
+            }
+            
+        } catch (SQLException | NumberFormatException e) {
+            System.err.println("Error al buscar clientes: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                System.err.println("Error al cerrar recursos: " + e.getMessage());
+            }
+        }
+        
+        return results;
+    }
+    
+    private JPanel createCategoriesPanel() {
+        JPanel categoriesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        categoriesPanel.setBackground(Color.WHITE);
+        
+        // Botón "Todos" activo por defecto
+        JButton todosButton = createCategoryButton("Todos", true);
+        todosButton.addActionListener(e -> {
+            setActiveCategoryButton(todosButton);
+            activeCategoryButton = todosButton;
+            filteredProducts = new ArrayList<>(products); // Mostrar todos los productos
+            currentPage = 1; // Resetear a la primera página
+            updateProductsGrid();
+        });
+        categoriesPanel.add(todosButton);
+        activeCategoryButton = todosButton; // Inicializar el botón activo
+        
+        // Agregar categorías dinámicamente si están cargadas
+        if (categories != null) {
+            for (Category category : categories) {
+                JButton categoryButton = createCategoryButton(category.getName(), false);
+                categoryButton.addActionListener(e -> {
+                    setActiveCategoryButton(categoryButton);
+                    activeCategoryButton = categoryButton;
+                    filterProductsByCategory(category.getId());
+                });
+                categoriesPanel.add(categoryButton);
+            }
+        }
+        
+        return categoriesPanel;
+    }
+    
+    private void filterProductsByCategory(int categoryId) {
+        if (products == null) return;
+        
+        // Filtrar productos por categoría
+        filteredProducts = new ArrayList<>();
+        for (Product product : products) {
+            if (product.getCategoryId() == categoryId) {
+                filteredProducts.add(product);
+            }
+        }
+        
+        currentPage = 1; // Resetear a la primera página
+        updateProductsGrid();
+    }
+    
+    private void refreshCategoriesPanel() {
+        // Este método recarga el panel de categorías después de que se hayan cargado desde la base de datos
+        if (contentPanel != null) {
+            // Recrear la interfaz POS con las categorías actualizadas
+            updateContentForModule("pos");
+        }
+    }
+    
+    private void updateCartDisplay() {
+        // Actualizar totales
+        double subtotal = cartManager.getSubtotal();
+        double tax = cartManager.getTax();
+        double total = cartManager.getTotal();
+        
+        subtotalLabel.setText("Subtotal: $" + String.format("%.2f", subtotal));
+        taxLabel.setText("IVA (16%): $" + String.format("%.2f", tax));
+        totalLabel.setText("Total: $" + String.format("%.2f", total));
+        
+        // Habilitar/deshabilitar botón de checkout
+        checkoutButton.setEnabled(!cartManager.isEmpty());
+        
+        // Actualizar cambio
+        updateChangeDisplay();
+    }
+    
+    private void updateChangeDisplay() {
+        try {
+            double amountPaid = Double.parseDouble(amountPaidField.getText());
+            double total = cartManager.getTotal();
+            double change = amountPaid - total;
+            
+            if (change >= 0) {
+                changeLabel.setText("Cambio: $" + String.format("%.2f", change));
+                changeLabel.setForeground(new Color(39, 174, 96));
+            } else {
+                changeLabel.setText("Falta: $" + String.format("%.2f", Math.abs(change)));
+                changeLabel.setForeground(Color.RED);
+            }
+        } catch (NumberFormatException e) {
+            changeLabel.setText("Cambio: $0.00");
+            changeLabel.setForeground(new Color(39, 174, 96));
+        }
+    }
+    
+    private void clearCart() {
+        clearCart(true); // Por defecto pedir confirmación
+    }
+    
+    private void clearCart(boolean askConfirmation) {
+        if (askConfirmation) {
+            int option = JOptionPane.showConfirmDialog(
+                this,
+                "¿Está seguro que desea limpiar el carrito?",
+                "Confirmar acción",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (option != JOptionPane.YES_OPTION) {
+                return; // No limpiar si el usuario cancela
+            }
+        }
+        
+        // Limpiar carrito sin confirmación
+        cartManager.clearCart();
+        updateCartDisplay();
+        amountPaidField.setText("");
+        selectedClienteId = null;
+        clienteSearchField.setText("");
+        clienteComboBox.removeAllItems();
+        clienteComboBox.addItem("Sin cliente");
+        clienteComboBox.setSelectedIndex(0);
+        selectedClienteLabel.setText("Cliente: Ninguno seleccionado");
+        selectedClienteLabel.setForeground(Color.GRAY); // Color gris para mejor visibilidad
+    }
+    
+    private void processCheckout() {
+        if (cartManager.isEmpty()) {
+            UIUtils.showErrorMessage(this, "El carrito está vacío");
+            return;
+        }
+        
+        try {
+            double amountPaid = Double.parseDouble(amountPaidField.getText());
+            double total = cartManager.getTotal();
+            
+            if (amountPaid < total) {
+                UIUtils.showErrorMessage(this, "El monto recibido es insuficiente");
+                return;
+            }
+            
+            // Mostrar confirmación antes de procesar la venta
+            String message = String.format(
+                "<html><div style='text-align: center; font-family: Arial;'>" +
+                "<h3 style='color: #1976d2; margin-bottom: 15px;'>💳 Confirmar Procesamiento de Venta</h3>" +
+                "<p style='margin-bottom: 10px;'><b>Total a pagar:</b> <span style='color: #2e7d32; font-size: 16px;'>$%.2f</span></p>" +
+                "<p style='margin-bottom: 10px;'><b>Monto recibido:</b> <span style='color: #1976d2;'>$%.2f</span></p>" +
+                "<p style='margin-bottom: 15px;'><b>Cambio:</b> <span style='color: #f57c00;'>$%.2f</span></p>" +
+                "<p style='color: #666; font-size: 12px;'>¿Confirma el procesamiento de esta venta?</p>" +
+                "</div></html>",
+                total, amountPaid, (amountPaid - total)
+            );
+            
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                message,
+                "Confirmar Venta - Total: $" + String.format("%.2f", total),
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            // Solo procesar si el usuario confirma
+            if (result != JOptionPane.YES_OPTION) {
+                return;
+            }
+            
+            // Crear venta
+            Sale sale = new Sale();
+            sale.setUserId(sessionManager.getUserId());
+            sale.setItems(cartManager.getSaleItems());
+            sale.setAmountPaid(amountPaid);
+            
+            if (selectedClienteId != null) {
+                sale.setClienteId(selectedClienteId);
+            }
+            
+            // Guardar venta
+            if (sale.save()) {
+                UIUtils.showSuccessMessage(this, "¡Venta procesada exitosamente por $" + String.format("%.2f", total) + "!");
+                
+                // Limpiar carrito y campos sin pedir confirmación
+                clearCart(false);
+                
+                // Recargar productos para actualizar stock
+                loadProducts();
+            } else {
+                UIUtils.showErrorMessage(this, "Error al procesar la venta");
+            }
+            
+        } catch (NumberFormatException e) {
+            UIUtils.showErrorMessage(this, "Ingrese un monto válido");
+        }
+    }
+    
+    private void openInventoryWindow() {
+        SwingUtilities.invokeLater(() -> {
+            InventoryFrameNew inventoryFrame = new InventoryFrameNew();
+            inventoryFrame.setVisible(true);
+        });
+    }
+
+    private void openSuppliersWindow() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                views.suppliers.SuppliersFrame suppliersFrame = new views.suppliers.SuppliersFrame();
+                suppliersFrame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error al abrir la ventana de proveedores: " + e.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 }

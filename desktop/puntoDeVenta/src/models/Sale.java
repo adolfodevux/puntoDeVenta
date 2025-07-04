@@ -121,7 +121,7 @@ public class Sale {
                             this.id = generatedKeys.getInt(1);
 
                             // Guardar items de venta
-                            String itemSql = "INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price, total) VALUES (?, ?, ?, ?, ?, ?)";
+                            String itemSql = "INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?)";
                             try (PreparedStatement itemStmt = conn.prepareStatement(itemSql)) {
                                 for (SaleItem item : items) {
                                     itemStmt.setInt(1, this.id);
@@ -206,6 +206,38 @@ public class Sale {
             e.printStackTrace();
         }
         return sales;
+    }
+
+    // Método para obtener los items de una venta específica
+    public static List<SaleItem> getSaleItems(int saleId) {
+        List<SaleItem> items = new ArrayList<>();
+        String sql = "SELECT si.id, si.sale_id, si.product_id, si.product_name, " +
+                    "si.quantity, si.unit_price " +
+                    "FROM sale_items si " +
+                    "WHERE si.sale_id = ? " +
+                    "ORDER BY si.id";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, saleId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    SaleItem item = new SaleItem();
+                    item.setId(rs.getInt("id"));
+                    item.setSaleId(rs.getInt("sale_id"));
+                    item.setProductId(rs.getInt("product_id"));
+                    item.setProductName(rs.getString("product_name"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setPrice(rs.getDouble("unit_price"));
+                    items.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
     }
 
     // Clase interna para items de venta
