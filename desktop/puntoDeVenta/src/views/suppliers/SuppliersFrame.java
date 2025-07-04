@@ -15,16 +15,6 @@ public class SuppliersFrame extends JFrame {
     private List<Supplier> filteredSuppliers;
     private int totalSuppliers = 0;
     private int suppliersWithProducts = 0;
-    
-    // Variables para paginación
-    private int currentPage = 0;
-    private int itemsPerPage = 5;
-    private int totalPages = 0;
-    private JLabel pageInfoLabel;
-    private JButton prevPageButton;
-    private JButton nextPageButton;
-    private JButton firstPageButton;
-    private JButton lastPageButton;
 
     public SuppliersFrame() {
         setTitle("Gestión de Proveedores - Punto de Venta");
@@ -39,7 +29,7 @@ public class SuppliersFrame extends JFrame {
         // Luego inicializar los componentes con los datos cargados
         initializeComponents();
         
-        // Finalmente cargar la tabla con paginación
+        // Finalmente cargar la tabla
         updateTable();
         
         setupEventListeners();
@@ -278,10 +268,6 @@ public class SuppliersFrame extends JFrame {
         scrollPane.getViewport().setBackground(Color.WHITE);
 
         tablePanel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Agregar panel de paginación
-        JPanel paginationPanel = createPaginationPanel();
-        tablePanel.add(paginationPanel, BorderLayout.SOUTH);
 
         return tablePanel;
     }
@@ -379,30 +365,14 @@ public class SuppliersFrame extends JFrame {
         
         if (filteredSuppliers == null) {
             System.out.println("ERROR: filteredSuppliers es null");
-            filteredSuppliers = new java.util.ArrayList<>();
+            return;
         }
         
         System.out.println("Actualizando tabla con " + filteredSuppliers.size() + " proveedores");
         
-        // Limpiar tabla
         tableModel.setRowCount(0);
         
-        // Calcular paginación
-        totalPages = (int) Math.ceil((double) filteredSuppliers.size() / itemsPerPage);
-        if (totalPages == 0) totalPages = 1;
-        
-        // Ajustar página actual si es necesario
-        if (currentPage >= totalPages) {
-            currentPage = Math.max(0, totalPages - 1);
-        }
-        
-        // Calcular inicio y fin para la página actual
-        int startIndex = currentPage * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, filteredSuppliers.size());
-        
-        // Agregar solo los elementos de la página actual
-        for (int i = startIndex; i < endIndex; i++) {
-            Supplier supplier = filteredSuppliers.get(i);
+        for (Supplier supplier : filteredSuppliers) {
             System.out.println("Agregando proveedor: " + supplier.getName());
             
             // Crear información de contacto
@@ -434,12 +404,6 @@ public class SuppliersFrame extends JFrame {
         }
         
         System.out.println("Tabla actualizada. Filas en tableModel: " + tableModel.getRowCount());
-        System.out.println("Página actual: " + (currentPage + 1) + " de " + totalPages);
-        
-        // Actualizar controles de paginación
-        if (pageInfoLabel != null) {
-            updatePaginationControls();
-        }
     }
 
     private void setupEventListeners() {
@@ -599,166 +563,6 @@ public class SuppliersFrame extends JFrame {
                     "Error al eliminar el proveedor. Por favor, inténtelo de nuevo.",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-    
-    private JPanel createPaginationPanel() {
-        JPanel paginationPanel = new JPanel(new BorderLayout());
-        paginationPanel.setBackground(Color.WHITE);
-        paginationPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-
-        // Panel izquierdo - información de página
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        leftPanel.setBackground(Color.WHITE);
-        
-        pageInfoLabel = new JLabel();
-        pageInfoLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        pageInfoLabel.setForeground(new Color(108, 117, 125));
-        leftPanel.add(pageInfoLabel);
-
-        // Panel derecho - controles de navegación
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
-        rightPanel.setBackground(Color.WHITE);
-
-        // Botones de navegación
-        firstPageButton = createPaginationButton("<<", "Primera página");
-        prevPageButton = createPaginationButton("<", "Página anterior");
-        nextPageButton = createPaginationButton(">", "Página siguiente");
-        lastPageButton = createPaginationButton(">>", "Última página");
-
-        // Etiqueta de página actual
-        JLabel currentPageLabel = new JLabel("Página:");
-        currentPageLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        currentPageLabel.setForeground(new Color(108, 117, 125));
-
-        rightPanel.add(firstPageButton);
-        rightPanel.add(prevPageButton);
-        rightPanel.add(currentPageLabel);
-        rightPanel.add(nextPageButton);
-        rightPanel.add(lastPageButton);
-
-        paginationPanel.add(leftPanel, BorderLayout.WEST);
-        paginationPanel.add(rightPanel, BorderLayout.EAST);
-
-        // Configurar listeners de los botones
-        firstPageButton.addActionListener(e -> goToFirstPage());
-        prevPageButton.addActionListener(e -> goToPreviousPage());
-        nextPageButton.addActionListener(e -> goToNextPage());
-        lastPageButton.addActionListener(e -> goToLastPage());
-
-        return paginationPanel;
-    }
-
-    private JButton createPaginationButton(String text, String tooltip) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 12));
-        button.setPreferredSize(new Dimension(40, 30));
-        button.setBackground(new Color(248, 249, 250));
-        button.setForeground(new Color(52, 73, 94));
-        button.setBorder(BorderFactory.createLineBorder(new Color(206, 212, 218), 1));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setToolTipText(tooltip);
-        
-        // Efecto hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                if (button.isEnabled()) {
-                    button.setBackground(new Color(0, 123, 255));
-                    button.setForeground(Color.WHITE);
-                }
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                if (button.isEnabled()) {
-                    button.setBackground(new Color(248, 249, 250));
-                    button.setForeground(new Color(52, 73, 94));
-                }
-            }
-        });
-        
-        return button;
-    }
-
-    // Métodos de navegación de paginación
-    private void goToFirstPage() {
-        currentPage = 0;
-        updateTable();
-        updatePaginationControls();
-    }
-
-    private void goToPreviousPage() {
-        if (currentPage > 0) {
-            currentPage--;
-            updateTable();
-            updatePaginationControls();
-        }
-    }
-
-    private void goToNextPage() {
-        if (currentPage < totalPages - 1) {
-            currentPage++;
-            updateTable();
-            updatePaginationControls();
-        }
-    }
-
-    private void goToLastPage() {
-        currentPage = totalPages - 1;
-        updateTable();
-        updatePaginationControls();
-    }
-
-    private void updatePaginationControls() {
-        if (filteredSuppliers == null || filteredSuppliers.isEmpty()) {
-            pageInfoLabel.setText("No hay proveedores para mostrar");
-            firstPageButton.setEnabled(false);
-            prevPageButton.setEnabled(false);
-            nextPageButton.setEnabled(false);
-            lastPageButton.setEnabled(false);
-            return;
-        }
-
-        // Calcular páginas totales
-        totalPages = (int) Math.ceil((double) filteredSuppliers.size() / itemsPerPage);
-        if (totalPages == 0) totalPages = 1;
-
-        // Ajustar página actual si es necesario
-        if (currentPage >= totalPages) {
-            currentPage = Math.max(0, totalPages - 1);
-        }
-
-        // Calcular información de elementos
-        int startItem = currentPage * itemsPerPage + 1;
-        int endItem = Math.min((currentPage + 1) * itemsPerPage, filteredSuppliers.size());
-        int totalItems = filteredSuppliers.size();
-
-        // Actualizar etiqueta de información
-        pageInfoLabel.setText(String.format("Mostrando %d a %d de %d proveedores", 
-            startItem, endItem, totalItems));
-
-        // Actualizar estado de botones
-        firstPageButton.setEnabled(currentPage > 0);
-        prevPageButton.setEnabled(currentPage > 0);
-        nextPageButton.setEnabled(currentPage < totalPages - 1);
-        lastPageButton.setEnabled(currentPage < totalPages - 1);
-
-        // Actualizar colores de botones deshabilitados
-        updateDisabledButtonColors();
-    }
-
-    private void updateDisabledButtonColors() {
-        JButton[] buttons = {firstPageButton, prevPageButton, nextPageButton, lastPageButton};
-        for (JButton button : buttons) {
-            if (!button.isEnabled()) {
-                button.setBackground(new Color(233, 236, 239));
-                button.setForeground(new Color(134, 142, 150));
-            } else {
-                button.setBackground(new Color(248, 249, 250));
-                button.setForeground(new Color(52, 73, 94));
             }
         }
     }

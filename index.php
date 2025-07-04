@@ -632,7 +632,7 @@
                     </div>
                     <h3>Versión Escritorio</h3>
                     <p>Aplicación completa para Windows, macOS y Linux. Incluye todas las funcionalidades avanzadas y trabaja sin conexión a internet.</p>
-                    <a href="desktop/puntoDeVenta/#" class="download-btn" download>
+                    <a href="desktop/puntoDeVenta/PuntoDeVenta.jar" class="download-btn" download>
                         <i class="fas fa-download"></i> Descargar JAR
                     </a>
                 </div>

@@ -7,6 +7,9 @@ import utils.UIUtils;
 import views.auth.LoginFrame;
 import views.sales.SalesFrame;
 import views.inventory.InventoryFrameNew;
+import views.suppliers.SuppliersFrame;
+import views.clients.ClientsFrame;
+import views.categories.CategoriesFrame;
 import config.DatabaseConfig;
 
 import javax.swing.*;
@@ -1173,19 +1176,26 @@ public class DashboardFrame extends JFrame {
             SalesFrame.openSalesWindow();
             return;
         }
-        
         // Caso especial para Inventario - abrir ventana independiente
         if ("inventory".equals(module)) {
             openInventoryWindow();
             return;
         }
-        
         // Caso especial para Proveedores - abrir ventana independiente
         if ("providers".equals(module)) {
             openSuppliersWindow();
             return;
         }
-        
+        // Caso especial para Clientes - abrir ventana independiente
+        if ("customers".equals(module)) {
+            openClientsWindow();
+            return;
+        }
+        // Caso especial para Categorías - abrir ventana independiente
+        if ("categories".equals(module)) {
+            openCategoriesWindow();
+            return;
+        }
         this.currentModule = module;
         
         // Actualizar estilos de botones de navegación
@@ -1757,5 +1767,25 @@ public class DashboardFrame extends JFrame {
                     javax.swing.JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+    
+    private void openClientsWindow() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                views.clients.ClientsFrame clientsFrame = new views.clients.ClientsFrame();
+                clientsFrame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error al abrir la ventana de clientes: " + e.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+    
+    private void openCategoriesWindow() {
+        CategoriesFrame categoriesFrame = new CategoriesFrame();
+        categoriesFrame.setVisible(true);
     }
 }
